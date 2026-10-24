@@ -50,8 +50,9 @@ jobs:
             -f infra/budget.bicep -p infra/budget.bicepparam --only-show-errors -o none
 
       - name: What-if
+        # ResourceIdOnly: list what changes without echoing property values (e.g. connection strings) into public logs
         run: |
-          az deployment group what-if -g "$RESOURCE_GROUP" \
+          az deployment group what-if -g "$RESOURCE_GROUP" --result-format ResourceIdOnly \
             -f infra/main.bicep -p "infra/${TARGET_ENV}.bicepparam" \
             -p dbConnection="$DB_CONNECTION" --only-show-errors
         env:
