@@ -499,3 +499,6 @@ appsettings.Development.local.json
 .DS_Store
 test-results/
 playwright-report/
+
+# --- Reqnroll: feature code-behind is generated at build time ---
+*.feature.cs
