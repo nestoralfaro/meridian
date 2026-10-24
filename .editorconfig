@@ -11,5 +11,8 @@ indent_size = 2
 [*.{cs,csx}]
 indent_size = 4
 
+[*.ts]
+quote_type = single
+
 [*.md]
 trim_trailing_whitespace = false
