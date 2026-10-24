@@ -9,7 +9,7 @@ namespace Meridian.ArchitectureTests;
 
 /// <summary>
 /// Enforces the dependency rule: Domain ← Application ← Infrastructure ← hosts (Api, Worker).
-/// See docs/adr/0005-solution-structure.md.
+/// See docs/adr/0006-solution-structure.md.
 /// </summary>
 public sealed class LayeringTests
 {

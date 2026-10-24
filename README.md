@@ -28,7 +28,7 @@ src/
   meridian-web/             Angular SPA (zoneless, standalone, strict TypeScript)
 tests/
   Meridian.ArchitectureTests/     layering rules enforced in CI (ArchUnitNET)
-  Meridian.Api.IntegrationTests/  in-memory host tests (WebApplicationFactory)
+  Meridian.Api.IntegrationTests/  host tests + Reqnroll acceptance specs, real PostgreSQL via Testcontainers
 .github/     workflows, issue/PR templates, CODEOWNERS, Dependabot
 infra/       Bicep: Log Analytics, Application Insights, Container Apps, budget
 docs/adr/    Architecture Decision Records
@@ -57,11 +57,33 @@ npm run test:ci           # Vitest, single run
 npm run build             # production build with bundle budgets
 ```
 
+## Run locally
+
+1. Start PostgreSQL (until `docker compose` lands in #10):
+   ```bash
+   docker run -d --rm --name meridian-db -p 5432:5432 \
+     -e POSTGRES_USER=meridian -e POSTGRES_PASSWORD=meridian-local-dev -e POSTGRES_DB=meridian \
+     postgres:17-alpine
+   ```
+2. **Day-to-day development**: run the API and the Angular dev server (it proxies `/api` and `/health` to the API):
+   ```bash
+   dotnet run --project src/Meridian.Api          # http://localhost:5090
+   (cd src/meridian-web && npm start)            # http://localhost:4200
+   ```
+3. **Production-like single origin**: build the SPA, then let the API serve it:
+   ```bash
+   (cd src/meridian-web && npm run build)
+   dotnet run --project src/Meridian.Api --launch-profile single-origin   # http://localhost:5090
+   ```
+
+Endpoints: `/health/live` (process up), `/health/ready` (database reachable), `/api/v1/version` (build and commit).
+
 ## Architecture decisions
 
 - [ADR-0001](docs/adr/0001-record-architecture-decisions.md): Record architecture decisions
 - [ADR-0002](docs/adr/0002-hosting-azure-container-apps.md): Host on Azure Container Apps
 - [ADR-0003](docs/adr/0003-oidc-deploy-identity.md): Deploy with OIDC workload identity federation
+- [ADR-0004](docs/adr/0004-single-origin-hosting.md): Serve the SPA and the API from a single origin
 
 ## License
 

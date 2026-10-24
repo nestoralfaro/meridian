@@ -1,9 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- In-memory host tests (WebApplicationFactory) against a real PostgreSQL (Testcontainers),
+       plus the executable acceptance specs (Reqnroll) for API-level stories. Requires Docker. -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\Meridian.Api\Meridian.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Reqnroll.xunit.v3" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Stand-in for the Angular build output so SPA hosting can be tested without Node. -->
+    <None Include="SpaFixture\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

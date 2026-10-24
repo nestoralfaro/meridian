@@ -11,4 +11,7 @@
     Fictional demo with synthetic data. Not affiliated with any financial institution and not
     investment advice.
   </p>
+  @if (shortCommit(); as commit) {
+    <p class="build-info" data-testid="build-info">Build {{ commit }}</p>
+  }
 </footer>

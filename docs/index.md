@@ -14,6 +14,7 @@ Source code: [github.com/nestoralfaro/meridian](https://github.com/nestoralfaro/
 - [ADR-0001: Record architecture decisions](adr/0001-record-architecture-decisions.html)
 - [ADR-0002: Host on Azure Container Apps](adr/0002-hosting-azure-container-apps.html)
 - [ADR-0003: Deploy with OIDC workload identity federation](adr/0003-oidc-deploy-identity.html)
+- [ADR-0004: Serve the SPA and the API from a single origin](adr/0004-single-origin-hosting.html)
 
 ## Coming soon
 
