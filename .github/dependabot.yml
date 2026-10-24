@@ -20,4 +20,15 @@ updates:
         patterns: ['Microsoft.Extensions.*', 'Microsoft.AspNetCore.*']
       testing:
         patterns: ['xunit*', 'Shouldly', 'TngTech.ArchUnitNET*', 'Microsoft.Testing.*']
-  # Add npm and docker ecosystems when those manifests exist (#8, #10).
+  - package-ecosystem: npm
+    directory: /src/meridian-web
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+    groups:
+      angular:
+        patterns: ['@angular/*', '@angular-devkit/*', 'angular-eslint', '@angular-eslint/*']
+      lint-and-test:
+        patterns: ['eslint', '@eslint/*', 'typescript-eslint', 'prettier', 'vitest', 'jsdom']
+  # Add the docker ecosystem when the Dockerfile exists (#10).

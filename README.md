@@ -25,6 +25,7 @@ src/
   Meridian.Infrastructure/  adapters; only DependencyInjection is public
   Meridian.Api/             ASP.NET Core host and composition root
   Meridian.Worker/          background jobs host
+  meridian-web/             Angular SPA (zoneless, standalone, strict TypeScript)
 tests/
   Meridian.ArchitectureTests/     layering rules enforced in CI (ArchUnitNET)
   Meridian.Api.IntegrationTests/  in-memory host tests (WebApplicationFactory)
@@ -35,12 +36,25 @@ docs/adr/    Architecture Decision Records
 
 ## Build and test
 
-Requires the .NET 10 SDK (pinned in [`global.json`](global.json)).
+**Backend** (.NET 10 SDK, pinned in [`global.json`](global.json)):
 
 ```bash
 dotnet build              # warnings are errors
 dotnet test               # xUnit v3 on Microsoft.Testing.Platform
 dotnet run --project src/Meridian.Api
+```
+
+**Frontend** (Node 24, pinned in [`.nvmrc`](.nvmrc)):
+
+```bash
+cd src/meridian-web
+nvm use
+npm ci
+npm start                 # dev server at http://localhost:4200
+npm run lint              # angular-eslint incl. template accessibility rules
+npm run format:check      # Prettier
+npm run test:ci           # Vitest, single run
+npm run build             # production build with bundle budgets
 ```
 
 ## Architecture decisions
