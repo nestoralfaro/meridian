@@ -17,8 +17,8 @@ GitHub Actions needs to deploy to Azure. The traditional approach stores a servi
 Use **OIDC federation**. The Entra ID app registration `gh-meridian-deploy` has:
 
 - **Contributor on `rg-meridian` only** (least privilege: it cannot touch anything else in the subscription, and cannot assign roles).
-- Federated credential subject `repo:nestoralfaro/meridian:ref:refs/heads/main` while the repository is private.
-- Once the repository is public, environment-scoped subjects (`...:environment:staging`, `...:environment:production`) replace the branch subject, so production deploys require passing the `production` environment's approval gate.
+- Federated credential subject `repo:nestoralfaro@83131937/meridian@1431767514:ref:refs/heads/main` while the repository is private. GitHub uses the *immutable* subject format for this repository (owner and repo numeric IDs embedded), so a deleted-and-recreated repository with the same name cannot inherit the trust.
+- Once the repository is public, environment-scoped subjects (`repo:nestoralfaro@83131937/meridian@1431767514:environment:staging` / `...:environment:production`) replace the branch subject, so production deploys require passing the `production` environment's approval gate.
 
 Client, tenant and subscription IDs are stored as GitHub *variables* (they are identifiers, not secrets).
 
