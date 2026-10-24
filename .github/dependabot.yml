@@ -9,4 +9,15 @@ updates:
     groups:
       actions:
         patterns: ['*']
-  # Add nuget, npm and docker ecosystems when those manifests exist (Sprint 0 scaffolding).
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+    groups:
+      microsoft-extensions:
+        patterns: ['Microsoft.Extensions.*', 'Microsoft.AspNetCore.*']
+      testing:
+        patterns: ['xunit*', 'Shouldly', 'TngTech.ArchUnitNET*', 'Microsoft.Testing.*']
+  # Add npm and docker ecosystems when those manifests exist (#8, #10).
