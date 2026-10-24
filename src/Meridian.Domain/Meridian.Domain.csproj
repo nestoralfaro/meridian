@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The domain model. Must not reference any other project or framework package (enforced by Meridian.ArchitectureTests). -->
+</Project>

@@ -19,9 +19,28 @@ A full-stack demo of a client-facing investing and planning portal: **Angular** 
 ## Repository layout (so far)
 
 ```
+src/
+  Meridian.Domain/          domain model (no framework or project dependencies)
+  Meridian.Application/     use cases and ports (depends on Domain only)
+  Meridian.Infrastructure/  adapters; only DependencyInjection is public
+  Meridian.Api/             ASP.NET Core host and composition root
+  Meridian.Worker/          background jobs host
+tests/
+  Meridian.ArchitectureTests/     layering rules enforced in CI (ArchUnitNET)
+  Meridian.Api.IntegrationTests/  in-memory host tests (WebApplicationFactory)
 .github/     workflows, issue/PR templates, CODEOWNERS, Dependabot
 infra/       Bicep: Log Analytics, Application Insights, Container Apps, budget
 docs/adr/    Architecture Decision Records
+```
+
+## Build and test
+
+Requires the .NET 10 SDK (pinned in [`global.json`](global.json)).
+
+```bash
+dotnet build              # warnings are errors
+dotnet test               # xUnit v3 on Microsoft.Testing.Platform
+dotnet run --project src/Meridian.Api
 ```
 
 ## Architecture decisions

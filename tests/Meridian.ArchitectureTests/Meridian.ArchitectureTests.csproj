@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Meridian.Domain\Meridian.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Meridian.Application\Meridian.Application.csproj" />
+    <ProjectReference Include="..\..\src\Meridian.Infrastructure\Meridian.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Meridian.Api\Meridian.Api.csproj" />
+    <ProjectReference Include="..\..\src\Meridian.Worker\Meridian.Worker.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TngTech.ArchUnitNET.xUnitV3" />
+  </ItemGroup>
+</Project>
