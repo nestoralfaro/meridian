@@ -28,7 +28,7 @@ jobs:
   deploy:
     name: deploy (${{ inputs.environment || 'staging' }})
     runs-on: ubuntu-latest
-    # environment: ${{ inputs.environment || 'staging' }}   # enable once the repo is public (approval gates + env secrets)
+    environment: ${{ inputs.environment || 'staging' }} # approval gate for production; env-scoped secrets + OIDC subject
     steps:
       - uses: actions/checkout@v7
 
@@ -56,7 +56,7 @@ jobs:
             -f infra/main.bicep -p "infra/${TARGET_ENV}.bicepparam" \
             -p dbConnection="$DB_CONNECTION" --only-show-errors
         env:
-          DB_CONNECTION: ${{ inputs.environment == 'production' && secrets.DB_CONNECTION_PRODUCTION || secrets.DB_CONNECTION_STAGING }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
 
       - name: Deploy
         id: deploy
@@ -68,7 +68,7 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "### ${TARGET_ENV}: $url" >> "$GITHUB_STEP_SUMMARY"
         env:
-          DB_CONNECTION: ${{ inputs.environment == 'production' && secrets.DB_CONNECTION_PRODUCTION || secrets.DB_CONNECTION_STAGING }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
 
       - name: Smoke test
         run: curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors -o /dev/null "${{ steps.deploy.outputs.url }}"
