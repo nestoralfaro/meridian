@@ -11,7 +11,10 @@ A full-stack demo of a client-facing investing and planning portal: **Angular** 
 | Environment | URL | Deployed by |
 |---|---|---|
 | Staging | https://meridian-staging.whitefield-3aacc510.eastus2.azurecontainerapps.io | [`infra.yml`](.github/workflows/infra.yml) on merge to `main` |
-| Production | _coming soon_ | `infra.yml` (manual, approval-gated) |
+| Production | https://meridian-production.grayhill-d6e042ce.eastus2.azurecontainerapps.io | [`infra.yml`](.github/workflows/infra.yml) (manual, approval-gated via the `production` environment) |
+| Docs | https://nestoralfaro.github.io/meridian/ | [`pages.yml`](.github/workflows/pages.yml) on merge to `main` |
+
+> Both environments currently serve a placeholder container (scale-to-zero, so the first request may take a few seconds) until the application is scaffolded.
 
 ## Repository layout (so far)
 
