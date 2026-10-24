@@ -59,24 +59,28 @@ npm run build             # production build with bundle budgets
 
 ## Run locally
 
-1. Start PostgreSQL (until `docker compose` lands in #10):
-   ```bash
-   docker run -d --rm --name meridian-db -p 5432:5432 \
-     -e POSTGRES_USER=meridian -e POSTGRES_PASSWORD=meridian-local-dev -e POSTGRES_DB=meridian \
-     postgres:17-alpine
-   ```
-2. **Day-to-day development**: run the API and the Angular dev server (it proxies `/api` and `/health` to the API):
-   ```bash
-   dotnet run --project src/Meridian.Api          # http://localhost:5090
-   (cd src/meridian-web && npm start)            # http://localhost:4200
-   ```
-3. **Production-like single origin**: build the SPA, then let the API serve it:
-   ```bash
-   (cd src/meridian-web && npm run build)
-   dotnet run --project src/Meridian.Api --launch-profile single-origin   # http://localhost:5090
-   ```
+**Whole stack in containers** (production-like image + PostgreSQL 17):
+
+```bash
+SOURCE_REVISION=$(git rev-parse HEAD) docker compose up --build   # http://localhost:8080
+docker compose down -v                                             # stop and delete the local database
+```
+
+**Day-to-day development** (hot reload). Start only the database, then the API and the Angular dev server, which proxies `/api` and `/health` to the API:
+
+```bash
+docker compose up -d db
+dotnet run --project src/Meridian.Api          # http://localhost:5090
+(cd src/meridian-web && npm start)            # http://localhost:4200
+```
+
+To serve a real Angular build from the API without Docker: `(cd src/meridian-web && npm run build)`, then `dotnet run --project src/Meridian.Api --launch-profile single-origin`.
 
 Endpoints: `/health/live` (process up), `/health/ready` (database reachable), `/api/v1/version` (build and commit).
+
+### Container image
+
+Multi-stage [`Dockerfile`](Dockerfile): Node builds the SPA → .NET SDK publishes the API → **chiseled** ASP.NET runtime (no shell or package manager, non-root user `app`, port 8080). About 134 MB uncompressed and 52 MB to pull; the app itself adds about 2 MB to Microsoft's base image.
 
 ## Architecture decisions
 

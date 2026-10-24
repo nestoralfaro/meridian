@@ -31,4 +31,14 @@ updates:
         patterns: ['@angular/*', '@angular-devkit/*', 'angular-eslint', '@angular-eslint/*']
       lint-and-test:
         patterns: ['eslint', '@eslint/*', 'typescript-eslint', 'prettier', 'vitest', 'jsdom']
-  # Add the docker ecosystem when the Dockerfile exists (#10).
+    ignore:
+      # Angular pins a narrow TypeScript range (@angular/compiler-cli 22.2: >=6.0 <6.1);
+      # TypeScript moves with `ng update`, not independently. Patch updates are still allowed.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build

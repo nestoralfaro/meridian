@@ -1,6 +1,7 @@
 using Meridian.Infrastructure.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace Meridian.Infrastructure;
 
@@ -29,7 +30,12 @@ public static class DependencyInjection
                 $"Connection string '{ConnectionStringName}' is not configured. Set ConnectionStrings__{ConnectionStringName}.");
         }
 
-        services.AddNpgsqlDataSource(connectionString);
+        services.AddNpgsqlDataSource(connectionString, dataSource =>
+        {
+            // Neon doesn't use Kerberos, and the chiseled runtime image has no libgssapi:
+            // probing for GSS encryption only costs a round trip and logs a native-library error.
+            dataSource.ConnectionStringBuilder.GssEncryptionMode = GssEncryptionMode.Disable;
+        });
 
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database", tags: [ReadinessTag]);

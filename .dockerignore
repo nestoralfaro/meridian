@@ -1,0 +1,22 @@
+# Keep the build context small and free of local state, secrets and build output.
+**/.git
+**/.github
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.angular
+**/coverage
+**/TestResults
+**/*.user
+**/.env
+**/.env.*
+**/appsettings.Development.json
+**/appsettings.*.local.json
+tests/
+docs/
+infra/
+*.md
+Dockerfile
+docker-compose*.yml
+.dockerignore
