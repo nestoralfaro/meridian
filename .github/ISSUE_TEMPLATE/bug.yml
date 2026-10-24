@@ -1,0 +1,35 @@
+name: Bug
+description: Something is broken or behaves unexpectedly.
+title: "bug: "
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened vs. what was expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: input
+    id: trace
+    attributes:
+      label: Trace ID (from the error message or ProblemDetails response)
+  - type: dropdown
+    id: env
+    attributes:
+      label: Environment
+      options: [local, staging, production]
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options: ["p1 - client impact, no workaround", "p2 - degraded, workaround exists", "p3 - minor"]

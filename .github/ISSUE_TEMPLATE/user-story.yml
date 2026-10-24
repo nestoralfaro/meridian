@@ -1,0 +1,37 @@
+name: User story
+description: A client- or business-facing capability, written from the user's point of view.
+title: "story: "
+labels: ["type:story"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: Story
+      value: |
+        As a <persona>,
+        I want <capability>
+        so that <outcome>.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria (Gherkin)
+      description: These scenarios become executable Reqnroll specs.
+      render: gherkin
+      value: |
+        Scenario:
+          Given
+          When
+          Then
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (UX, accessibility, security, out of scope)
+  - type: dropdown
+    id: points
+    attributes:
+      label: Estimate (story points)
+      options: ["1", "2", "3", "5", "8", "13"]
