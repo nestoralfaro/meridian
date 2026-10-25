@@ -1,0 +1,146 @@
+name: deploy
+
+# Reusable blue/green deployment of one image to one environment (docs/adr/0008-immutable-revision-deployments.md):
+#   1. Bicep deploys a new, uniquely named revision while traffic stays pinned to the current revision (0% to the new one).
+#   2. The new revision is smoke-tested on its own revision URL.
+#   3. Pass → 100% of traffic moves to it; the previous revision stays active for instant rollback.
+#      Fail → traffic never moves, the new revision is deactivated, and the job fails with a summary.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      commit:
+        description: Full commit SHA; the image ghcr.io/<repo>:<commit> must exist.
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: deploy (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.promote.outputs.url }}
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      RESOURCE_GROUP: rg-meridian
+      TARGET_ENV: ${{ inputs.environment }}
+      APP: meridian-${{ inputs.environment }}
+      COMMIT: ${{ inputs.commit }}
+      IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit }} # deploy the infrastructure definition that matches the image
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Budget (resource-group wide)
+        if: inputs.environment == 'staging'
+        env:
+          BUDGET_EMAIL: ${{ secrets.BUDGET_EMAIL }}
+        run: |
+          if [ -z "$BUDGET_EMAIL" ]; then echo "::warning::BUDGET_EMAIL not set; skipping budget"; exit 0; fi
+          az deployment group create -g "$RESOURCE_GROUP" -n "budget-${GITHUB_RUN_ID}" \
+            -f infra/budget.bicep -p infra/budget.bicepparam --only-show-errors -o none
+
+      - name: Resolve current revision
+        id: current
+        run: |
+          revision=""
+          if az containerapp show -g "$RESOURCE_GROUP" -n "$APP" -o none 2>/dev/null; then
+            # The revision holding 100% of traffic, or the latest ready one if traffic follows "latest".
+            revision=$(az containerapp show -g "$RESOURCE_GROUP" -n "$APP" \
+              --query "properties.configuration.ingress.traffic[?weight==\`100\`].revisionName | [0]" -o tsv)
+            if [ -z "$revision" ]; then
+              revision=$(az containerapp show -g "$RESOURCE_GROUP" -n "$APP" --query properties.latestReadyRevisionName -o tsv)
+            fi
+          fi
+          suffix="${COMMIT:0:7}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          {
+            echo "revision=$revision"
+            echo "suffix=$suffix"
+            echo "new=${APP}--${suffix}"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Deploying \`${COMMIT:0:7}\` to ${TARGET_ENV}"
+            echo "- current revision: \`${revision:-none (first deployment)}\`"
+            echo "- new revision: \`${APP}--${suffix}\` (0% traffic until verified)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy new revision (traffic stays on the current one)
+        env:
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
+        run: |
+          az deployment group create -g "$RESOURCE_GROUP" -n "app-${TARGET_ENV}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            -f infra/main.bicep -p "infra/${TARGET_ENV}.bicepparam" \
+            -p image="$IMAGE" \
+               revisionSuffix="${{ steps.current.outputs.suffix }}" \
+               trafficRevisionName="${{ steps.current.outputs.revision }}" \
+               dbConnection="$DB_CONNECTION" \
+            --only-show-errors -o none
+
+      - name: Smoke test the new revision on its own URL
+        run: |
+          fqdn=$(az containerapp revision show -g "$RESOURCE_GROUP" -n "$APP" \
+            --revision "${{ steps.current.outputs.new }}" --query properties.fqdn -o tsv)
+          scripts/smoke-test.sh "https://${fqdn}" "$COMMIT"
+
+      - name: Promote (shift 100% of traffic)
+        id: promote
+        run: |
+          az containerapp ingress traffic set -g "$RESOURCE_GROUP" -n "$APP" \
+            --revision-weight "${{ steps.current.outputs.new }}=100" --only-show-errors -o none
+          url="https://$(az containerapp show -g "$RESOURCE_GROUP" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "### ✅ ${TARGET_ENV} now serves \`${COMMIT:0:7}\`: ${url}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify the public URL serves the new build
+        run: |
+          served=$(curl -s --retry 5 --retry-delay 5 --retry-all-errors "${{ steps.promote.outputs.url }}/api/v1/version" \
+            | sed -n 's/.*"commit":"\([^"]*\)".*/\1/p')
+          if [ "$served" != "$COMMIT" ]; then
+            echo "::error::Public URL serves '${served:-nothing}', expected $COMMIT"
+            exit 1
+          fi
+
+      - name: Retire older revisions (keep current + previous for rollback)
+        run: |
+          keep_new="${{ steps.current.outputs.new }}"
+          keep_previous="${{ steps.current.outputs.revision }}"
+          az containerapp revision list -g "$RESOURCE_GROUP" -n "$APP" \
+            --query "[?properties.active].name" -o tsv | while read -r name; do
+            if [ "$name" != "$keep_new" ] && [ "$name" != "$keep_previous" ]; then
+              az containerapp revision deactivate -g "$RESOURCE_GROUP" -n "$APP" --revision "$name" --only-show-errors -o none
+              echo "- retired \`$name\`" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+      - name: Roll back on failure (deactivate the unverified revision)
+        if: failure() && steps.current.outputs.revision != ''
+        run: |
+          new="${{ steps.current.outputs.new }}"
+          previous="${{ steps.current.outputs.revision }}"
+          # Make sure traffic is on the previous revision (it is, unless promotion itself partially failed).
+          az containerapp ingress traffic set -g "$RESOURCE_GROUP" -n "$APP" \
+            --revision-weight "${previous}=100" --only-show-errors -o none || true
+          if az containerapp revision show -g "$RESOURCE_GROUP" -n "$APP" --revision "$new" -o none 2>/dev/null; then
+            az containerapp revision deactivate -g "$RESOURCE_GROUP" -n "$APP" --revision "$new" --only-show-errors -o none || true
+          fi
+          {
+            echo "### ❌ Deployment of \`${COMMIT:0:7}\` to ${TARGET_ENV} failed"
+            echo "- traffic remains on \`${previous}\`"
+            echo "- unverified revision \`${new}\` was deactivated"
+          } >> "$GITHUB_STEP_SUMMARY"

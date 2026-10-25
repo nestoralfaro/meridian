@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/nestoralfaro/meridian/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nestoralfaro/meridian/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/nestoralfaro/meridian/actions/workflows/codeql/badge.svg?branch=main)](https://github.com/nestoralfaro/meridian/security/code-scanning)
-[![infra](https://github.com/nestoralfaro/meridian/actions/workflows/infra.yml/badge.svg?branch=main)](https://github.com/nestoralfaro/meridian/actions/workflows/infra.yml)
+[![cd](https://github.com/nestoralfaro/meridian/actions/workflows/cd.yml/badge.svg?branch=main)](https://github.com/nestoralfaro/meridian/actions/workflows/cd.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A full-stack demo of a client-facing investing and planning portal: **Angular** SPA + **ASP.NET Core (.NET 10)** REST API, deployed to **Azure Container Apps** with infrastructure as code, CI/CD, and automated quality gates.
@@ -15,11 +15,11 @@ A full-stack demo of a client-facing investing and planning portal: **Angular** 
 
 | Environment | URL | Deployed by |
 |---|---|---|
-| Staging | https://meridian-staging.whitefield-3aacc510.eastus2.azurecontainerapps.io | [`infra.yml`](.github/workflows/infra.yml) on merge to `main` |
-| Production | https://meridian-production.grayhill-d6e042ce.eastus2.azurecontainerapps.io | [`infra.yml`](.github/workflows/infra.yml) (manual, approval-gated via the `production` environment) |
+| Staging | https://meridian-staging.whitefield-3aacc510.eastus2.azurecontainerapps.io | [`cd.yml`](.github/workflows/cd.yml) on every merge to `main` (blue/green, smoke-tested) |
+| Production | https://meridian-production.grayhill-d6e042ce.eastus2.azurecontainerapps.io | [`cd.yml`](.github/workflows/cd.yml) manual promotion of a staging-verified image, approval-gated |
 | Docs | https://nestoralfaro.github.io/meridian/ | [`pages.yml`](.github/workflows/pages.yml) on merge to `main` |
 
-> Both environments currently serve a placeholder container (scale-to-zero, so the first request may take a few seconds) until the application is scaffolded.
+> Both environments scale to zero when idle, so the first request after a quiet period can take a few seconds. Deployment and rollback: [runbook](docs/runbooks/deploy-and-rollback.md).
 
 ## Repository layout (so far)
 
@@ -93,6 +93,7 @@ Multi-stage [`Dockerfile`](Dockerfile): Node builds the SPA → .NET SDK publish
 - [ADR-0002](docs/adr/0002-hosting-azure-container-apps.md): Host on Azure Container Apps
 - [ADR-0003](docs/adr/0003-oidc-deploy-identity.md): Deploy with OIDC workload identity federation
 - [ADR-0004](docs/adr/0004-single-origin-hosting.md): Serve the SPA and the API from a single origin
+- [ADR-0008](docs/adr/0008-immutable-revision-deployments.md): Deploy every change as an immutable, verified revision
 
 ## License
 

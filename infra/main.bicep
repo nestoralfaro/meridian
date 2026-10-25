@@ -1,5 +1,6 @@
 // Meridian: per-environment application stack (staging | production).
-// Deployed by .github/workflows/infra.yml. See docs/adr/0002-hosting-azure-container-apps.md.
+// Deployed by .github/workflows/deploy.yml as a new revision on every change (docs/adr/0008-immutable-revision-deployments.md).
+// See docs/adr/0002-hosting-azure-container-apps.md.
 targetScope = 'resourceGroup'
 
 @description('Deployment environment.')
@@ -9,11 +10,17 @@ param env string
 @description('Azure region. Defaults to the resource group region.')
 param location string = resourceGroup().location
 
-@description('Container image. A public placeholder until the app image exists in GHCR.')
-param image string = 'mcr.microsoft.com/k8se/quickstart:latest'
+@description('Container image, e.g. ghcr.io/nestoralfaro/meridian:<commit-sha>.')
+param image string
 
-@description('Port the container listens on. 80 for the placeholder, 8080 for ASP.NET Core.')
-param targetPort int = 80
+@description('Port the ASP.NET Core container listens on.')
+param targetPort int = 8080
+
+@description('Revision suffix, unique per deployment (e.g. <sha7>-<run>-<attempt>). Empty lets Azure generate one.')
+param revisionSuffix string = ''
+
+@description('Revision that keeps 100% of traffic while the new revision is verified. Empty sends traffic to the latest revision (first deployment only).')
+param trafficRevisionName string = ''
 
 @description('Minimum replicas. 0 = scale to zero (free); 1 = always warm (a few USD/month).')
 @minValue(0)
@@ -83,10 +90,15 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
         targetPort: targetPort
         transport: 'auto'
         allowInsecure: false
+        // New revisions start with 0% traffic; CD shifts traffic only after the revision passes its smoke test.
+        traffic: empty(trafficRevisionName)
+          ? [{ latestRevision: true, weight: 100 }]
+          : [{ revisionName: trafficRevisionName, weight: 100 }]
       }
       secrets: hasDb ? [{ name: 'db-connection', value: dbConnection }] : []
     }
     template: {
+      revisionSuffix: empty(revisionSuffix) ? null : revisionSuffix
       containers: [
         {
           name: 'web'
@@ -96,9 +108,21 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
             memory: '0.5Gi'
           }
           env: concat(
-            [{ name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appi.properties.ConnectionString }],
+            [
+              { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appi.properties.ConnectionString }
+              // TLS terminates at the Container Apps ingress; honour X-Forwarded-Proto/For so the app sees https.
+              { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' }
+            ],
             hasDb ? [{ name: 'ConnectionStrings__Meridian', secretRef: 'db-connection' }] : []
           )
+          probes: [
+            // Startup: allow up to 60 s for the process to start before liveness applies.
+            { type: 'Startup', httpGet: { path: '/health/live', port: targetPort }, periodSeconds: 2, failureThreshold: 30 }
+            // Liveness: the process only, so a database outage never restarts containers.
+            { type: 'Liveness', httpGet: { path: '/health/live', port: targetPort }, periodSeconds: 30, failureThreshold: 3 }
+            // Readiness: the database must be reachable before the replica receives traffic.
+            { type: 'Readiness', httpGet: { path: '/health/ready', port: targetPort }, periodSeconds: 15, failureThreshold: 3 }
+          ]
         }
       ]
       scale: {
