@@ -26,6 +26,7 @@
     <div class="session">
       @if (auth.user(); as user) {
         <span class="session__user">Signed in as {{ user.displayName }}</span>
+        <button type="button" class="session__sign-out" (click)="auth.signOut()">Sign out</button>
       } @else if (auth.status() === 'signed-out') {
         <a routerLink="/sign-in">Sign in</a>
       }
@@ -46,3 +47,5 @@
     <p class="build-info" data-testid="build-info">Build {{ commit }}</p>
   }
 </footer>
+
+<mer-session-timeout-dialog />

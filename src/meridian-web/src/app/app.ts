@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, inject } from '@angular/c
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { RouteFocusService } from './core/a11y/route-focus.service';
 import { AuthService } from './core/auth/auth.service';
+import { SessionTimeoutDialog } from './core/auth/session-timeout-dialog';
+import { SessionTimeoutService } from './core/auth/session-timeout.service';
 import { BuildInfoService } from './core/build-info/build-info.service';
 
 interface NavItem {
@@ -12,7 +14,7 @@ interface NavItem {
 
 @Component({
   selector: 'mer-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SessionTimeoutDialog],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +33,7 @@ export class App {
 
   constructor() {
     inject(RouteFocusService).start();
+    inject(SessionTimeoutService).start();
   }
 
   /** Moves focus to the main region without letting the router treat the fragment as a navigation. */

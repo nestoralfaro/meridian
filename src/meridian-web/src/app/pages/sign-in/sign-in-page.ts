@@ -37,6 +37,8 @@ export class SignInPage {
     password: ['', Validators.required],
   });
   protected readonly credentialError = signal<string | null>(null);
+  protected readonly signedOutForInactivity =
+    this.route.snapshot.queryParamMap.get('reason') === 'idle';
 
   protected async signInWithPassword(): Promise<void> {
     if (this.credentials.invalid) {

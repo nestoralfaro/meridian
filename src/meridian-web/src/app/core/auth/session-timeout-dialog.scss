@@ -1,0 +1,49 @@
+.timeout {
+  max-inline-size: min(28rem, calc(100vw - 2rem));
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+
+  &::backdrop {
+    background: rgb(0 0 0 / 50%);
+  }
+
+  h2 {
+    margin-block-start: 0;
+  }
+}
+
+.timeout__clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.timeout__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.timeout__stay,
+.timeout__leave {
+  min-block-size: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.timeout__stay {
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.timeout__leave {
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text);
+}

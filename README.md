@@ -94,6 +94,7 @@ Endpoints: `/health/live` (process up), `/health/ready` (database reachable **an
 - **Demo personas**: "Sign in as Dana / Raj" without credentials. Demo accounts can't change credentials.
 - **Registration and password sign-in**: passwords of at least 12 characters that aren't on a common-password list (NIST SP 800-63B), with field-level guidance. **Lockout** after 5 failures for 15 minutes; **one generic message** for every failure (and a dummy hash check for unknown emails), so responses don't reveal which emails are registered; **per-IP rate limiting** on credential endpoints (10/min in production).
 - **Append-only audit trail** of registrations, sign-ins, failures, lockouts and sign-outs, correlated with trace ids.
+- **Idle timeout**: after 13 minutes without input, a modal warning (native `<dialog>`, focus on "Stay signed in"); at 15 minutes the client is signed out and told why. This matches the server's 15-minute sliding session. Background requests don't count as activity.
 - **Data Protection keys** (which sign cookies and tokens) live in PostgreSQL, so sessions survive restarts and work across replicas.
 - Identity stays inside Infrastructure behind an Application port; the API only turns a verified user into claims and a cookie.
 
