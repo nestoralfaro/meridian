@@ -133,12 +133,15 @@ jobs:
             echo "No contract on ${BASE_REF} yet; nothing to compare."; exit 0
           fi
           cp openapi/meridian-v1.json /tmp/contract/revision.json
+          # Deliberately accepted reports, each with a written reason (reviewed like any other change).
+          touch /tmp/contract/ignore.txt
+          [ -f openapi/oasdiff-err-ignore.txt ] && cp openapi/oasdiff-err-ignore.txt /tmp/contract/ignore.txt
           oasdiff() { docker run --rm -v /tmp/contract:/c tufin/oasdiff:v1.34.1 "$@"; }
           {
             echo "### API contract changes"
             oasdiff changelog /c/base.json /c/revision.json --format markdown || true
           } >> "$GITHUB_STEP_SUMMARY"
-          oasdiff breaking /c/base.json /c/revision.json --fail-on ERR --format githubactions
+          oasdiff breaking /c/base.json /c/revision.json --fail-on ERR --err-ignore /c/ignore.txt --format githubactions
 
   e2e:
     name: e2e + accessibility

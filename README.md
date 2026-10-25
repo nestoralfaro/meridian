@@ -111,7 +111,7 @@ Endpoints: `/health/live` (process up), `/health/ready` (database reachable **an
 - The contract is committed at [`openapi/meridian-v1.json`](openapi/meridian-v1.json), so API changes are visible in code review:
   - a backend test fails if the API and the committed contract differ;
   - the SPA's TypeScript types are **generated** from it (`src/meridian-web/src/app/core/api`), and CI fails if they drift;
-  - **oasdiff** fails a PR that makes a breaking change against `main`.
+  - **oasdiff** fails a PR that makes a breaking change against `main`. A deliberate, reviewed exception goes in [`openapi/oasdiff-err-ignore.txt`](openapi/oasdiff-err-ignore.txt) **with a written reason**, never through an admin bypass.
 - After changing an endpoint:
   ```bash
   MERIDIAN_UPDATE_OPENAPI=1 dotnet test --project tests/Meridian.Api.IntegrationTests -- --filter-class "*OpenApiContractTests"
