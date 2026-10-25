@@ -13,6 +13,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/sign-in/sign-in-page').then((m) => m.SignInPage),
   },
   {
+    path: 'register',
+    title: 'Create your account | Meridian',
+    loadComponent: () => import('./pages/register/register-page').then((m) => m.RegisterPage),
+  },
+  {
     path: 'dashboard',
     title: 'Dashboard | Meridian',
     canActivate: [authGuard],

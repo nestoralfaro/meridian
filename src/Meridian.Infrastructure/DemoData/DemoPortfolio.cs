@@ -17,6 +17,9 @@ internal static class DemoPortfolio
 {
     public const string DanaEmail = "dana@meridian.test";
     public const string RajEmail = "raj@meridian.test";
+
+    /// <summary>Accounts registered by automated end-to-end runs use this domain; each reset removes them.</summary>
+    public const string EndToEndEmailDomain = "@e2e.meridian.test";
     public const int HistoryDays = 90;
 
     /// <summary>

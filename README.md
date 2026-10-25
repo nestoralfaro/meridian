@@ -92,6 +92,8 @@ Endpoints: `/health/live` (process up), `/health/ready` (database reachable **an
 - **Cookie session, no tokens in the browser**: ASP.NET Core Identity issues an `HttpOnly`, `Secure`, `SameSite=Strict` cookie with a 15-minute sliding idle timeout. The API answers 401/403; it never redirects.
 - **CSRF protection**: antiforgery tokens on every state-changing request, using the cookie and header names Angular's `HttpClient` sends automatically (`XSRF-TOKEN` → `X-XSRF-TOKEN`).
 - **Demo personas**: "Sign in as Dana / Raj" without credentials. Demo accounts can't change credentials.
+- **Registration and password sign-in**: passwords of at least 12 characters that aren't on a common-password list (NIST SP 800-63B), with field-level guidance. **Lockout** after 5 failures for 15 minutes; **one generic message** for every failure (and a dummy hash check for unknown emails), so responses don't reveal which emails are registered; **per-IP rate limiting** on credential endpoints (10/min in production).
+- **Append-only audit trail** of registrations, sign-ins, failures, lockouts and sign-outs, correlated with trace ids.
 - **Data Protection keys** (which sign cookies and tokens) live in PostgreSQL, so sessions survive restarts and work across replicas.
 - Identity stays inside Infrastructure behind an Application port; the API only turns a verified user into claims and a cookie.
 

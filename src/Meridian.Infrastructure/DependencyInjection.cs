@@ -1,3 +1,4 @@
+using Meridian.Application.Auditing;
 using Meridian.Application.DemoData;
 using Meridian.Application.Identity;
 using Meridian.Infrastructure.DemoData;
@@ -64,8 +65,10 @@ public static class DependencyInjection
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
                 options.Lockout.AllowedForNewUsers = true;
             })
-            .AddEntityFrameworkStores<MeridianDbContext>();
+            .AddEntityFrameworkStores<MeridianDbContext>()
+            .AddPasswordValidator<CommonPasswordValidator>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IAuditTrail, AuditTrail>();
 
         // Keys that sign session cookies and antiforgery tokens, shared by every replica.
         services.AddDataProtection()

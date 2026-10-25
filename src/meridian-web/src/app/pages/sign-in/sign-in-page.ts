@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, type DemoPersonaKey } from '../../core/auth/auth.service';
 
 interface Persona {
@@ -10,6 +11,7 @@ interface Persona {
 
 @Component({
   selector: 'mer-sign-in-page',
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './sign-in-page.html',
   styleUrl: './sign-in-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +31,30 @@ export class SignInPage {
   ];
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
+
+  protected readonly credentials = inject(NonNullableFormBuilder).group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', Validators.required],
+  });
+  protected readonly credentialError = signal<string | null>(null);
+
+  protected async signInWithPassword(): Promise<void> {
+    if (this.credentials.invalid) {
+      this.credentialError.set('Enter your email and password.');
+      return;
+    }
+    this.busy.set(true);
+    this.credentialError.set(null);
+    const result = await this.auth.signIn(this.credentials.getRawValue());
+    this.busy.set(false);
+    if (result.ok) {
+      await this.router.navigateByUrl(this.returnUrl());
+    } else {
+      this.credentialError.set(
+        'message' in result ? result.message : 'Sign-in failed. Please try again.',
+      );
+    }
+  }
 
   protected async signInAs(persona: DemoPersonaKey): Promise<void> {
     this.busy.set(true);

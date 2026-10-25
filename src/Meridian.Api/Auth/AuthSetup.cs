@@ -3,6 +3,8 @@ using Meridian.Application.Identity;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Meridian.Api.Auth;
 
@@ -16,6 +18,7 @@ internal static class AuthSetup
     public const string XsrfCookie = "XSRF-TOKEN";
     public const string XsrfHeader = "X-XSRF-TOKEN";
     public static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(15);
+    public const string SignInRateLimit = "sign-in";
 
     private static bool SecureCookies { get; set; } = true;
 
@@ -51,6 +54,32 @@ internal static class AuthSetup
             options.Cookie.SecurePolicy = securePolicy;
         });
 
+        return services;
+    }
+
+    /// <summary>
+    /// Per-client-IP limit on credential endpoints (sign-in, register): slows password guessing and credential stuffing
+    /// on top of per-account lockout. The client IP comes from X-Forwarded-For behind the Container Apps ingress.
+    /// </summary>
+    public static IServiceCollection AddSignInRateLimiting(this IServiceCollection services, int permitsPerMinute)
+    {
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy(SignInRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = permitsPerMinute, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            options.OnRejected = async (rejection, cancellationToken) =>
+            {
+                if (rejection.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                {
+                    rejection.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+
+                await TypedResults.Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "Too many attempts. Please wait a minute and try again.")
+                    .ExecuteAsync(rejection.HttpContext).ConfigureAwait(false);
+            };
+        });
         return services;
     }
 

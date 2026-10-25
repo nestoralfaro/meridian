@@ -53,6 +53,26 @@ public sealed class DemoDataSeederTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ResetRemovesEndToEndTestAccountsButKeepsRealUsers()
+    {
+        await UseDemoDataAsync(demo => demo.EnsureSeededAsync(TestContext.Current.CancellationToken));
+        await UseDbAsync(async db =>
+        {
+            db.Clients.Add(new Client(Guid.CreateVersion7(), "E2E Run", $"run-1{DemoPortfolio.EndToEndEmailDomain}"));
+            db.Clients.Add(new Client(Guid.CreateVersion7(), "Real Person", "real.person@example.test"));
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        });
+
+        await UseDemoDataAsync(demo => demo.ResetAsync(TestContext.Current.CancellationToken));
+
+        await UseDbAsync(async db =>
+        {
+            (await db.Clients.AnyAsync(c => c.Email.EndsWith(DemoPortfolio.EndToEndEmailDomain), TestContext.Current.CancellationToken)).ShouldBeFalse();
+            (await db.Clients.AnyAsync(c => c.Email == "real.person@example.test", TestContext.Current.CancellationToken)).ShouldBeTrue();
+        });
+    }
+
+    [Fact]
     public async Task DataSeededByAnOlderVersionIsUpgradedImmediately()
     {
         // e.g. the release that introduced demo users: existing demo data had clients but no users, and the daily

@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddObservability();
 builder.Services.AddApiDocumentation();
 builder.Services.AddMeridianAuth(secureCookies: builder.Configuration.GetValue("Auth:SecureCookies", defaultValue: true));
+builder.Services.AddSignInRateLimiting(permitsPerMinute: builder.Configuration.GetValue("Auth:SignInAttemptsPerMinute", defaultValue: 10));
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
@@ -23,6 +24,7 @@ app.UseStatusCodePages();
 app.UseSpaStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapHealthEndpoints();
 app.MapApiDocumentation();

@@ -1,3 +1,5 @@
+@use '../../shared/forms';
+
 .personas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
@@ -39,4 +41,8 @@
 .error {
   color: var(--color-danger);
   font-weight: 600;
+}
+
+.credentials {
+  margin-block-start: var(--space-6);
 }
