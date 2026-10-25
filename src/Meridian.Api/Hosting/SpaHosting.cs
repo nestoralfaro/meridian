@@ -31,11 +31,11 @@ internal static class SpaHosting
     {
         foreach (var prefix in ReservedPrefixes)
         {
-            endpoints.MapGroup(prefix).MapFallback(() => Results.NotFound());
+            endpoints.MapGroup(prefix).MapFallback(() => Results.NotFound()).ExcludeFromDescription();
         }
 
         // Default pattern {*path:nonfile}: paths that look like files (e.g. /missing.js) are not rewritten to the SPA.
-        endpoints.MapFallbackToFile(IndexFile, StaticFiles);
+        endpoints.MapFallbackToFile(IndexFile, StaticFiles).ExcludeFromDescription();
         return endpoints;
     }
 }

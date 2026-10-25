@@ -1,0 +1,55 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Meridian API",
+    "description": "REST API behind the Meridian Client Portal demo. Synthetic data only; not investment advice.",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/version": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Identifies the running build (semantic version and git commit).",
+        "operationId": "GetVersion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "VersionResponse": {
+        "required": [
+          "version",
+          "commit"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "commit": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "System"
+    }
+  ]
+}

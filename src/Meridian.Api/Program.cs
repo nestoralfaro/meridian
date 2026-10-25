@@ -6,6 +6,7 @@ using Meridian.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddObservability();
+builder.Services.AddApiDocumentation();
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
@@ -18,6 +19,7 @@ app.UseStatusCodePages();
 app.UseSpaStaticFiles();
 
 app.MapHealthEndpoints();
+app.MapApiDocumentation();
 app.MapGroup("/api/v1").MapVersionEndpoints();
 app.MapSpaFallback();
 

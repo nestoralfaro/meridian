@@ -5,6 +5,8 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 
 module.exports = defineConfig([
+  // Generated from openapi/meridian-v1.json (npm run api:generate); CI fails if it drifts.
+  { ignores: ['src/app/core/api/**'] },
   {
     files: ['**/*.ts'],
     extends: [
