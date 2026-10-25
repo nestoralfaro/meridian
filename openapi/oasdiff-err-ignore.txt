@@ -1,0 +1,26 @@
+# Accepted breaking-change reports (oasdiff --err-ignore). Each entry needs a reason; remove entries once inert.
+#
+# 2026-10-25 (#20): the API switched to strict JSON number handling. ASP.NET's lenient default had advertised numeric
+# fields as `number | string` with a string pattern; the API only ever sent numbers. Narrowing to `number` removes
+# the pattern, which oasdiff reports as response-property-pattern-removed. No client can break: every value they
+# received before is still exactly what they receive now.
+GET /api/v1/accounts the `accounts/items/cash/amount` response's property pattern `^-?(?:0|[1-9]\d*)(?:\.\d+)?$` was removed for the status `200` (shared schema: `MoneyResponse`, also at `accounts/items/dayChange/amount`, `accounts/items/totalValue/amount` and 2 more)
+GET /api/v1/accounts the `accounts/items/dayChangePercent` response's property pattern `^-?(?:0|[1-9]\d*)(?:\.\d+)?$` was removed for the status `200`
+GET /api/v1/accounts the `dayChangePercent` response's property pattern `^-?(?:0|[1-9]\d*)(?:\.\d+)?$` was removed for the status `200`
+GET /api/v1/accounts the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `401`
+GET /api/v1/accounts/{accountId} the `cash/amount` response's property pattern `^-?(?:0|[1-9]\d*)(?:\.\d+)?$` was removed for the status `200` (shared schema: `MoneyResponse`, also at `dayChange/amount`, `holdings/items/dayChange/amount` and 3 more)
+GET /api/v1/accounts/{accountId} the `dayChangePercent` response's property pattern `^-?(?:0|[1-9]\d*)(?:\.\d+)?$` was removed for the status `200`
+GET /api/v1/accounts/{accountId} the `holdings/items/quantity` response's property pattern `^-?(?:0|[1-9]\d*)(?:\.\d+)?$` was removed for the status `200`
+GET /api/v1/accounts/{accountId} the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `401`
+GET /api/v1/accounts/{accountId} the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `404`
+GET /api/v1/auth/me the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `401`
+POST /api/v1/auth/change-password the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `400`
+POST /api/v1/auth/change-password the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `401`
+POST /api/v1/auth/change-password the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `403`
+POST /api/v1/auth/demo-sign-in the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `400`
+POST /api/v1/auth/demo-sign-in the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `404`
+POST /api/v1/auth/register the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `400`
+POST /api/v1/auth/register the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `429`
+POST /api/v1/auth/sign-in the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `400`
+POST /api/v1/auth/sign-in the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `401`
+POST /api/v1/auth/sign-in the `status` response's property pattern `^-?(?:0|[1-9]\d*)$` was removed for the status `429`

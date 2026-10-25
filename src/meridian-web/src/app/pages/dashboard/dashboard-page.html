@@ -1,0 +1,70 @@
+<h1>Dashboard</h1>
+<p class="greeting">Welcome back, {{ firstName() }}</p>
+
+@let state = accounts.state();
+@switch (state.status) {
+  @case ('loading') {
+    <section class="overview" aria-busy="true" aria-label="Loading your accounts">
+      <div class="skeleton skeleton--total"></div>
+      <div class="skeleton skeleton--row"></div>
+      <div class="skeleton skeleton--row"></div>
+    </section>
+  }
+
+  @case ('error') {
+    <div class="problem" role="alert">
+      <p class="problem__title">Sorry, we couldn't load your accounts right now.</p>
+      @if (state.referenceId) {
+        <p class="problem__reference">
+          If this keeps happening, contact support with reference ID
+          <code>{{ state.referenceId }}</code
+          >.
+        </p>
+      }
+      <button type="button" class="button-secondary" (click)="accounts.reload()">Try again</button>
+    </div>
+  }
+
+  @case ('loaded') {
+    @let overview = state.overview;
+    @if (overview.accounts.length === 0) {
+      <p class="empty">You don't have any accounts yet. Accounts you open will appear here.</p>
+    } @else {
+      <section class="overview" aria-labelledby="total-label">
+        <p id="total-label" class="overview__label">Total value</p>
+        <p class="overview__total" data-testid="total-value">{{ money(overview.totalValue) }}</p>
+        <p
+          class="change"
+          [class.change--up]="overview.dayChange.amount > 0"
+          [class.change--down]="overview.dayChange.amount < 0"
+          [attr.aria-label]="describe(overview.dayChange, overview.dayChangePercent)"
+        >
+          <span aria-hidden="true">{{ overview.dayChange.amount >= 0 ? '▲' : '▼' }}</span>
+          {{ change(overview.dayChange) }} ({{ percent(overview.dayChangePercent) }}) today
+        </p>
+      </section>
+
+      <h2>Your accounts</h2>
+      <ul class="accounts">
+        @for (account of overview.accounts; track account.id) {
+          <li class="account" data-testid="account">
+            <div class="account__identity">
+              <span class="account__name">{{ account.name }}</span>
+              <span class="account__number">{{ account.maskedNumber }}</span>
+            </div>
+            <span class="account__value">{{ money(account.totalValue) }}</span>
+            <span
+              class="change"
+              [class.change--up]="account.dayChange.amount > 0"
+              [class.change--down]="account.dayChange.amount < 0"
+              [attr.aria-label]="describe(account.dayChange, account.dayChangePercent)"
+            >
+              <span aria-hidden="true">{{ account.dayChange.amount >= 0 ? '▲' : '▼' }}</span>
+              {{ change(account.dayChange) }} ({{ percent(account.dayChangePercent) }})
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  }
+}

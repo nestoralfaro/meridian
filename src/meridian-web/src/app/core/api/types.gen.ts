@@ -12,7 +12,7 @@ export type AccountDetailResponse = {
   totalValue: MoneyResponse;
   cash: MoneyResponse;
   dayChange: MoneyResponse;
-  dayChangePercent: number | string;
+  dayChangePercent: number;
   holdings: Array<HoldingResponse>;
 };
 
@@ -20,7 +20,7 @@ export type AccountsOverviewResponse = {
   accounts: Array<AccountSummaryResponse>;
   totalValue: MoneyResponse;
   dayChange: MoneyResponse;
-  dayChangePercent: number | string;
+  dayChangePercent: number;
 };
 
 export type AccountSummaryResponse = {
@@ -31,7 +31,7 @@ export type AccountSummaryResponse = {
   totalValue: MoneyResponse;
   cash: MoneyResponse;
   dayChange: MoneyResponse;
-  dayChangePercent: number | string;
+  dayChangePercent: number;
 };
 
 export type ChangePasswordRequest = {
@@ -47,7 +47,7 @@ export type HoldingResponse = {
   symbol: string;
   name: string;
   assetClass: string;
-  quantity: number | string;
+  quantity: number;
   price: MoneyResponse;
   marketValue: MoneyResponse;
   dayChange: MoneyResponse;
@@ -56,7 +56,7 @@ export type HoldingResponse = {
 export type HttpValidationProblemDetails = {
   type?: null | string;
   title?: null | string;
-  status?: null | number | string;
+  status?: null | number;
   detail?: null | string;
   instance?: null | string;
   errors?: {
@@ -71,14 +71,14 @@ export type MeResponse = {
 };
 
 export type MoneyResponse = {
-  amount: number | string;
+  amount: number;
   currency: string;
 };
 
 export type ProblemDetails = {
   type?: null | string;
   title?: null | string;
-  status?: null | number | string;
+  status?: null | number;
   detail?: null | string;
   instance?: null | string;
 };
