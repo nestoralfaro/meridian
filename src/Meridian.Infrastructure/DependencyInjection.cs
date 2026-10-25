@@ -1,7 +1,10 @@
+using Meridian.Application.DemoData;
+using Meridian.Infrastructure.DemoData;
 using Meridian.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
 
 namespace Meridian.Infrastructure;
@@ -40,6 +43,9 @@ public static class DependencyInjection
 
         services.AddDbContext<MeridianDbContext>((provider, options) =>
             options.UseNpgsql(provider.GetRequiredService<NpgsqlDataSource>()));
+
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddScoped<IDemoData, DemoDataSeeder>();
 
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database", tags: [ReadinessTag])

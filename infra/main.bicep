@@ -27,6 +27,9 @@ param trafficRevisionName string = ''
 @maxValue(1)
 param minReplicas int = 0
 
+@description('Seed the synthetic demo portfolio and reset it daily (in-app; see DemoDataMaintenance).')
+param demoDataEnabled bool = true
+
 @description('Npgsql connection string for the app role. Empty until the app needs a database.')
 @secure()
 param dbConnection string = ''
@@ -112,6 +115,7 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
               { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appi.properties.ConnectionString }
               // TLS terminates at the Container Apps ingress; honour X-Forwarded-Proto/For so the app sees https.
               { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' }
+              { name: 'Demo__Enabled', value: string(demoDataEnabled) }
             ],
             hasDb ? [{ name: 'ConnectionStrings__Meridian', secretRef: 'db-connection' }] : []
           )

@@ -34,6 +34,20 @@ internal static class TestDatabase
     /// <summary>A database with grants but no migrations applied, as the application role.</summary>
     public static async Task<string> GetUnmigratedConnectionStringAsync() => await ConnectAsync(UnmigratedDatabase, MeridianDbContext.ApplicationRole, AppPassword);
 
+    /// <summary>
+    /// A brand-new, migrated database with production grants, for tests that delete or rewrite data.
+    /// Returns the application-role connection string.
+    /// </summary>
+    public static async Task<string> CreateIsolatedDatabaseAsync()
+    {
+        await Ready.Value.ConfigureAwait(false);
+        var name = $"meridian_{Guid.NewGuid():N}";
+        await ExecuteAsync(Container.GetConnectionString(), $"CREATE DATABASE {name} OWNER {OwnerRole}").ConfigureAwait(false);
+        await ExecuteAsync(Owner(name), await GrantsAsync().ConfigureAwait(false)).ConfigureAwait(false);
+        await MigrateAsync(Owner(name)).ConfigureAwait(false);
+        return await ConnectAsync(name, MeridianDbContext.ApplicationRole, AppPassword).ConfigureAwait(false);
+    }
+
     private static async Task<string> ConnectAsync(string database, string username, string password)
     {
         await Ready.Value.ConfigureAwait(false);
@@ -62,14 +76,22 @@ internal static class TestDatabase
             await ExecuteAsync(Container.GetConnectionString(), statement).ConfigureAwait(false);
         }
 
-        var grants = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Database", "app-role-grants.sql")).ConfigureAwait(false);
+        var grants = await GrantsAsync().ConfigureAwait(false);
         foreach (var database in new[] { MigratedDatabase, UnmigratedDatabase })
         {
             await ExecuteAsync(Owner(database), grants).ConfigureAwait(false);
         }
 
         // The CD pipeline runs the migration bundle as the owner; the tests apply the same migrations.
-        var options = new DbContextOptionsBuilder<MeridianDbContext>().UseNpgsql(Owner(MigratedDatabase)).Options;
+        await MigrateAsync(Owner(MigratedDatabase)).ConfigureAwait(false);
+    }
+
+    private static Task<string> GrantsAsync() =>
+        File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Database", "app-role-grants.sql"));
+
+    private static async Task MigrateAsync(string ownerConnectionString)
+    {
+        var options = new DbContextOptionsBuilder<MeridianDbContext>().UseNpgsql(ownerConnectionString).Options;
         await using var db = new MeridianDbContext(options);
         await db.Database.MigrateAsync().ConfigureAwait(false);
     }

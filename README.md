@@ -29,9 +29,10 @@ src/
   Meridian.Application/     use cases and ports (depends on Domain only)
   Meridian.Infrastructure/  adapters; only DependencyInjection is public
   Meridian.Api/             ASP.NET Core host and composition root
-  Meridian.Worker/          background jobs host
+  Meridian.Worker/          background jobs host; one-off commands (demo-data reset)
   meridian-web/             Angular SPA (zoneless, standalone, strict TypeScript)
 tests/
+  Meridian.Domain.Tests/          domain rules (Money, portfolio valuation), test-first
   Meridian.ArchitectureTests/     layering rules enforced in CI (ArchUnitNET)
   e2e/                            Playwright + axe against the running stack
   Meridian.Api.IntegrationTests/  host tests + Reqnroll acceptance specs, real PostgreSQL via Testcontainers
@@ -85,6 +86,13 @@ dotnet run --project src/Meridian.Api          # http://localhost:5090
 To serve a real Angular build from the API without Docker: `(cd src/meridian-web && npm run build)`, then `dotnet run --project src/Meridian.Api --launch-profile single-origin`.
 
 Endpoints: `/health/live` (process up), `/health/ready` (database reachable **and** schema up to date), `/api/v1/version` (build and commit).
+
+### Demo data
+
+- Two **fictional personas**, Dana Lee (`dana@meridian.test`, new investor) and Raj Mehta (`raj@meridian.test`, pre-retiree), with brokerage, IRA and savings accounts, holdings in fictional securities (`MDTOT`, `MDINT`, `MDBND`, `MDMMF`, `ACME`, `GLBX`) and 90 days of activity.
+- Holdings are defined explicitly, so stories can rely on exact figures (Dana: $12,480.55 brokerage, $8,301.20 Roth IRA). The history comes from a **seeded generator**, so the same date always produces the same data.
+- When `Demo__Enabled=true` (compose, staging, production), the app **seeds an empty database on startup and resets data older than 24 hours**. It runs whenever the app is awake, so it works with scale-to-zero and needs no external scheduler. Seeding runs as the least-privilege app role, in one transaction under a PostgreSQL advisory lock, so concurrent replicas can't double-seed.
+- Reset on demand: Actions → `demo-data` → choose the environment, or locally `dotnet run --project src/Meridian.Worker -- demo-data reset`.
 
 ### API contract
 

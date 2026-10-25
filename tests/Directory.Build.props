@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Using Include="Shouldly" />
+    <Using Include="System.Globalization" />
     <Using Include="Xunit" />
   </ItemGroup>
 </Project>

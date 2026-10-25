@@ -10,6 +10,8 @@ builder.Services.AddApiDocumentation();
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
+builder.Services.Configure<DemoDataOptions>(builder.Configuration.GetSection(DemoDataOptions.Section));
+builder.Services.AddHostedService<DemoDataMaintenance>();
 
 var app = builder.Build();
 
