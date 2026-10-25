@@ -51,6 +51,8 @@ internal sealed class DemoDataSeeder(MeridianDbContext db, TimeProvider clock) :
         await db.Accounts.Where(a => demoClientIds.Contains(a.ClientId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await db.Users.Where(u => u.IsDemo).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await db.Clients.Where(c => demoClientIds.Contains(c.Id)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        // Accounts created by end-to-end test runs (their users cascade with the client).
+        await db.Clients.Where(c => c.Email.EndsWith(DemoPortfolio.EndToEndEmailDomain)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await db.Securities.Where(s => !db.Positions.Any(p => p.SecuritySymbol == s.Symbol)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await InsertPortfolioAsync(cancellationToken).ConfigureAwait(false);
     }

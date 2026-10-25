@@ -1,0 +1,75 @@
+<h1>Create your account</h1>
+
+<form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (summary().length > 0) {
+    <div class="error-summary" role="alert">
+      <p class="error-summary__title">Please fix the following:</p>
+      <ul>
+        @for (message of summary(); track message) {
+          <li>{{ message }}</li>
+        }
+      </ul>
+    </div>
+  }
+
+  <div class="field">
+    <label for="register-displayName">Your name</label>
+    <input
+      id="register-displayName"
+      type="text"
+      formControlName="displayName"
+      autocomplete="name"
+      [attr.aria-invalid]="errorsFor('displayName').length > 0"
+      [attr.aria-describedby]="
+        errorsFor('displayName').length > 0 ? 'register-displayName-error' : null
+      "
+    />
+    @if (errorsFor('displayName').length > 0) {
+      <p id="register-displayName-error" class="field__error">
+        {{ errorsFor('displayName').join(' ') }}
+      </p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="register-email">Email</label>
+    <input
+      id="register-email"
+      type="email"
+      formControlName="email"
+      autocomplete="email"
+      spellcheck="false"
+      [attr.aria-invalid]="errorsFor('email').length > 0"
+      [attr.aria-describedby]="errorsFor('email').length > 0 ? 'register-email-error' : null"
+    />
+    @if (errorsFor('email').length > 0) {
+      <p id="register-email-error" class="field__error">{{ errorsFor('email').join(' ') }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="register-password">Password</label>
+    <input
+      id="register-password"
+      type="password"
+      formControlName="password"
+      autocomplete="new-password"
+      [attr.aria-invalid]="errorsFor('password').length > 0"
+      [attr.aria-describedby]="
+        errorsFor('password').length > 0
+          ? 'register-password-hint register-password-error'
+          : 'register-password-hint'
+      "
+    />
+    <p id="register-password-hint" class="field__hint">
+      At least 12 characters. A few unrelated words make a strong, memorable password; avoid common
+      ones.
+    </p>
+    @if (errorsFor('password').length > 0) {
+      <p id="register-password-error" class="field__error">{{ errorsFor('password').join(' ') }}</p>
+    }
+  </div>
+
+  <button type="submit" class="button" [disabled]="busy()">Create account</button>
+  <p>Already have an account? <a routerLink="/sign-in">Sign in</a></p>
+</form>

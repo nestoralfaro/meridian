@@ -80,3 +80,84 @@ describe('AuthService', () => {
     expect(auth.status()).toBe('signed-in');
   });
 });
+
+describe('AuthService credentials', () => {
+  let http: HttpTestingController;
+  let auth: AuthService;
+  const nextMacrotask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    http = TestBed.inject(HttpTestingController);
+    auth = TestBed.inject(AuthService);
+    TestBed.tick();
+    http.expectOne('/api/v1/auth/me').flush(null, { status: 401, statusText: 'Unauthorized' });
+    await TestBed.inject(ApplicationRef).whenStable();
+  });
+
+  afterEach(() => http.verify());
+
+  async function answer(
+    url: string,
+    body: object | null,
+    status: number,
+    statusText: string,
+  ): Promise<void> {
+    await nextMacrotask();
+    http.expectOne(url).flush(body, { status, statusText });
+  }
+
+  it('returns field errors when registration is rejected', async () => {
+    const result = auth.register({
+      displayName: 'Avery',
+      email: 'a@example.test',
+      password: 'short',
+    });
+    await answer('/api/v1/auth/antiforgery', null, 204, 'No Content');
+    await answer(
+      '/api/v1/auth/register',
+      { errors: { password: ['Passwords must be at least 12 characters.'] } },
+      400,
+      'Bad Request',
+    );
+
+    expect(await result).toEqual({
+      ok: false,
+      errors: { password: ['Passwords must be at least 12 characters.'] },
+    });
+  });
+
+  it('returns the server message when sign-in fails', async () => {
+    const result = auth.signIn({ email: 'a@example.test', password: 'wrong wrong wrong' });
+    await answer('/api/v1/auth/antiforgery', null, 204, 'No Content');
+    await answer(
+      '/api/v1/auth/sign-in',
+      { detail: 'Sign-in failed. Check your email and password, or try again later.' },
+      401,
+      'Unauthorized',
+    );
+
+    expect(await result).toEqual({
+      ok: false,
+      message: 'Sign-in failed. Check your email and password, or try again later.',
+    });
+  });
+
+  it('explains rate limiting', async () => {
+    const result = auth.signIn({ email: 'a@example.test', password: 'wrong wrong wrong' });
+    await answer('/api/v1/auth/antiforgery', null, 204, 'No Content');
+    await answer(
+      '/api/v1/auth/sign-in',
+      { title: 'Too many attempts. Please wait a minute and try again.' },
+      429,
+      'Too Many Requests',
+    );
+
+    expect(await result).toEqual({
+      ok: false,
+      message: 'Too many attempts. Please wait a minute and try again.',
+    });
+  });
+});

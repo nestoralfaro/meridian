@@ -38,6 +38,17 @@ export type ProblemDetails = {
   instance?: null | string;
 };
 
+export type RegisterRequest = {
+  displayName: string;
+  email: string;
+  password: string;
+};
+
+export type SignInRequest = {
+  email: string;
+  password: string;
+};
+
 export type VersionResponse = {
   version: string;
   commit: string;
@@ -129,6 +140,84 @@ export type DemoSignInResponses = {
 };
 
 export type DemoSignInResponse = DemoSignInResponses[keyof DemoSignInResponses];
+
+export type RegisterData = {
+  body: RegisterRequest;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/register';
+};
+
+export type RegisterErrors = {
+  /**
+   * Bad Request
+   */
+  400: HttpValidationProblemDetails;
+  /**
+   * Too Many Requests
+   */
+  429: ProblemDetails;
+};
+
+export type RegisterError = RegisterErrors[keyof RegisterErrors];
+
+export type RegisterResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type RegisterResponse = RegisterResponses[keyof RegisterResponses];
+
+export type SignInData = {
+  body: SignInRequest;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/sign-in';
+};
+
+export type SignInErrors = {
+  /**
+   * Bad Request
+   */
+  400: ProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+  /**
+   * Too Many Requests
+   */
+  429: ProblemDetails;
+};
+
+export type SignInError = SignInErrors[keyof SignInErrors];
+
+export type SignInResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type SignInResponse = SignInResponses[keyof SignInResponses];
+
+export type SignOutData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/sign-out';
+};
+
+export type SignOutResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type SignOutResponse = SignOutResponses[keyof SignOutResponses];
 
 export type ChangePasswordData = {
   body: ChangePasswordRequest;

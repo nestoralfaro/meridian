@@ -1,8 +1,6 @@
 using System.Net;
 using System.Text.Json;
 using Meridian.Api.IntegrationTests.Infrastructure;
-using Meridian.Application.DemoData;
-using Microsoft.Extensions.DependencyInjection;
 using Reqnroll;
 
 namespace Meridian.Api.IntegrationTests.StepDefinitions;
@@ -11,14 +9,6 @@ namespace Meridian.Api.IntegrationTests.StepDefinitions;
 public sealed class DemoSignInSteps(ApiScenario api)
 {
     private const string SessionCookie = "meridian.session";
-
-    [Given("the demo personas exist")]
-    public async Task GivenTheDemoPersonasExist()
-    {
-        api.Start(new MeridianApiFactory(await TestDatabase.CreateIsolatedDatabaseAsync()));
-        await using var scope = api.Factory.Services.CreateAsyncScope();
-        await scope.ServiceProvider.GetRequiredService<IDemoData>().EnsureSeededAsync();
-    }
 
     [When(@"I sign in as the demo persona ""(.*)""")]
     [Given(@"I am signed in as the demo persona ""(.*)""")]
@@ -42,7 +32,6 @@ public sealed class DemoSignInSteps(ApiScenario api)
         me.StatusCode.ShouldBe(HttpStatusCode.OK);
         using var body = JsonDocument.Parse(await me.Content.ReadAsStringAsync());
         body.RootElement.GetProperty("displayName").GetString().ShouldBe(displayName);
-        body.RootElement.GetProperty("isDemo").GetBoolean().ShouldBeTrue();
     }
 
     [Then("the session cookie is HttpOnly, Secure and SameSite=Strict")]

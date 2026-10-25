@@ -30,6 +30,10 @@ param minReplicas int = 0
 @description('Seed the synthetic demo portfolio and reset it daily (in-app; see DemoDataMaintenance).')
 param demoDataEnabled bool = true
 
+@description('Per-client-IP limit on sign-in/registration requests per minute. Strict in production; higher in staging, where the CD end-to-end suite runs every journey from one runner IP.')
+@minValue(1)
+param signInAttemptsPerMinute int = 10
+
 @description('Npgsql connection string for the app role. Empty until the app needs a database.')
 @secure()
 param dbConnection string = ''
@@ -116,6 +120,7 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
               // TLS terminates at the Container Apps ingress; honour X-Forwarded-Proto/For so the app sees https.
               { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' }
               { name: 'Demo__Enabled', value: string(demoDataEnabled) }
+              { name: 'Auth__SignInAttemptsPerMinute', value: string(signInAttemptsPerMinute) }
             ],
             hasDb ? [{ name: 'ConnectionStrings__Meridian', secretRef: 'db-connection' }] : []
           )
