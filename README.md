@@ -167,7 +167,7 @@ Multi-stage [`Dockerfile`](Dockerfile): Node builds the SPA → .NET SDK publish
 
 - [Definition of Ready](docs/agile/definition-of-ready.md) · [Definition of Done](docs/agile/definition-of-done.md)
 - [Project board](https://github.com/users/nestoralfaro/projects/3) (two-week sprints, story points)
-- Sprint reviews and retrospectives: [Sprint 0](docs/agile/sprint-0-review.md)
+- Sprint reviews and retrospectives: [Sprint 0](docs/agile/sprint-0-review.md) · [Sprint 1](docs/agile/sprint-1-review.md)
 
 ## License
 
