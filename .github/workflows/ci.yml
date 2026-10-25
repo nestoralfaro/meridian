@@ -122,7 +122,7 @@ jobs:
           reports: coverage/**/*.xml
           targetdir: coverage-report
           reporttypes: MarkdownSummaryGithub;Html
-          assemblyfilters: '+Meridian.*;-Meridian.*Tests*'
+          assemblyfilters: '+Meridian.*;+app*;-Meridian.*Tests*' # backend assemblies + Angular packages (app.*), minus tests
           title: Meridian coverage
 
       - name: Publish to job summary
