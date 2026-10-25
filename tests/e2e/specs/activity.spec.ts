@@ -31,9 +31,8 @@ test.describe('recent activity', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: 'Activity' }),
     ).toBeFocused();
-    expect(await page.locator('mer-activity-list li').count()).toBeGreaterThan(
-      5,
-    );
+    // Web-first: waits for the list to load (count() reads it immediately, before the response arrives).
+    await expect(page.locator('mer-activity-list li').nth(5)).toBeVisible();
     await expectNoSeriousA11yViolations(page);
   });
 
