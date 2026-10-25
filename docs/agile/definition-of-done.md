@@ -12,7 +12,7 @@ An item is **Done** only when all of the following are true. CI enforces the sta
 - [ ] ★ Unit, integration and acceptance tests pass, including against real PostgreSQL (Testcontainers)
 - [ ] Acceptance criteria automated (Reqnroll scenarios / Playwright journeys)
 - [ ] New behaviour covered; coverage doesn't drop without a stated reason
-- [ ] Accessibility: keyboard and screen-reader behaviour considered for UI changes; ★ automated axe checks once #25 lands
+- [ ] Accessibility: keyboard and screen-reader behaviour considered for UI changes; ★ no serious/critical axe violations on any page (Playwright, Chromium + WebKit + mobile)
 
 **Safe to ship**
 - [ ] ★ No secrets (gitleaks), CodeQL alerts triaged, dependencies reviewed

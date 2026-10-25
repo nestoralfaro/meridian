@@ -4,10 +4,16 @@ on:
   push:
     branches: [main]
     paths: ['docs/**', 'README.md', '.github/workflows/pages.yml']
+  # Republish after every successful CI run on main so the test and coverage reports stay current.
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read # download report artifacts from CI runs
 
 concurrency:
   group: pages
@@ -15,6 +21,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -24,6 +31,23 @@ jobs:
         with:
           source: ./docs
           destination: ./_site
+      - name: Add the latest CI reports (Playwright, coverage)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          run="${RUN_ID:-$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')}"
+          if [ -z "$run" ]; then echo "No successful CI run on main yet"; exit 0; fi
+          sudo mkdir -p _site/reports
+          for artifact in playwright-report:e2e coverage-report:coverage; do
+            name="${artifact%%:*}"; dir="${artifact##*:}"
+            if gh run download "$run" --repo "$GITHUB_REPOSITORY" -n "$name" -D "/tmp/$dir"; then
+              sudo cp -r "/tmp/$dir" "_site/reports/$dir"
+            else
+              echo "::warning::artifact $name not found in run $run"
+            fi
+          done
+
       - uses: actions/upload-pages-artifact@v5
 
   deploy:
