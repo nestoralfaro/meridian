@@ -1,0 +1,33 @@
+@let list = items();
+@if (list === null && referenceId() !== null) {
+  <div class="problem" role="alert">
+    <p>Sorry, we couldn't load your activity.</p>
+    @if (referenceId()) {
+      <p class="muted">
+        Reference ID <code>{{ referenceId() }}</code>
+      </p>
+    }
+    <button type="button" class="retry" (click)="reload()">Try again</button>
+  </div>
+} @else if (list === null) {
+  <div class="skeleton" aria-busy="true" aria-label="Loading activity"></div>
+} @else if (list.length === 0) {
+  <p class="empty">Your transactions will appear here once you start using your accounts.</p>
+} @else {
+  <ul class="activity">
+    @for (item of list; track item.id) {
+      <li class="activity__item">
+        <div class="activity__what">
+          <span class="activity__description">{{ item.description }}</span>
+          <span class="muted"
+            ><time [attr.datetime]="item.date">{{ item.displayDate }}</time> ·
+            {{ item.accountName }}</span
+          >
+        </div>
+        <span class="activity__amount" [class.activity__amount--in]="item.amount.amount > 0">{{
+          item.displayAmount
+        }}</span>
+      </li>
+    }
+  </ul>
+}

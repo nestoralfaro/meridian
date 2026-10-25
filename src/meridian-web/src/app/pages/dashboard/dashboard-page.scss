@@ -114,3 +114,14 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.recent {
+  margin-block-start: var(--space-6);
+}
+
+.recent__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+}

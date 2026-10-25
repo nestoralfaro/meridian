@@ -24,6 +24,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/dashboard/dashboard-page').then((m) => m.DashboardPage),
   },
   {
+    path: 'activity',
+    title: 'Activity | Meridian',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/activity/activity-page').then((m) => m.ActivityPage),
+  },
+  {
     path: '**',
     title: 'Page not found | Meridian',
     loadComponent: () => import('./pages/not-found/not-found-page').then((m) => m.NotFoundPage),

@@ -18,7 +18,14 @@ public sealed class AccountQueriesTests
     private static readonly Account RajIra = new(Guid.NewGuid(), Raj, "Traditional IRA", AccountType.TraditionalIra, "****5508",
         Money.Usd(3120.40m), [new Position(Bond, 2000m, Money.Usd(127000m))]);
 
-    private readonly AccountQueries _queries = new(new InMemoryAccounts(DanaBrokerage, DanaRoth, RajIra));
+    private static readonly Transaction[] History =
+    [
+        .. Enumerable.Range(1, 12).Select(day => new Transaction(Guid.NewGuid(), day % 2 == 0 ? DanaBrokerage.Id : DanaRoth.Id,
+            new DateOnly(2026, 10, day), TransactionType.Deposit, $"Deposit {day}", Money.Usd(day * 10m))),
+        new Transaction(Guid.NewGuid(), RajIra.Id, new DateOnly(2026, 10, 30), TransactionType.Dividend, "Raj's dividend", Money.Usd(410m)),
+    ];
+
+    private readonly AccountQueries _queries = new(new InMemoryAccounts([DanaBrokerage, DanaRoth, RajIra], History));
 
     [Fact]
     public async Task TheOverviewTotalsTheClientsOwnAccountsOnly()
@@ -51,6 +58,29 @@ public sealed class AccountQueriesTests
 
         overview.Allocation.Sum(s => s.Percent).ShouldBe(100.00m);
         overview.Allocation.Select(s => s.Percent).ShouldBe([70.82m, 15.43m, 7.56m, 6.19m]); // the two largest remainders (Bond, Cash) get the missing cents
+    }
+
+    [Fact]
+    public async Task RecentActivityIsTheClientsNewestTransactionsFirst()
+    {
+        var activity = await _queries.GetRecentActivityAsync(Dana, limit: 5, TestContext.Current.CancellationToken);
+
+        activity.Select(a => a.Description).ShouldBe(["Deposit 12", "Deposit 11", "Deposit 10", "Deposit 9", "Deposit 8"]);
+        activity[0].AccountName.ShouldBe("Individual Brokerage");
+        activity.ShouldNotContain(a => a.Description == "Raj's dividend"); // never another client's activity
+    }
+
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(500, 50)]
+    public async Task TheActivityLimitIsClamped(int requested, int effective)
+    {
+        var many = new AccountQueries(new InMemoryAccounts([DanaBrokerage], [.. Enumerable.Range(0, 80).Select(i =>
+            new Transaction(Guid.NewGuid(), DanaBrokerage.Id, new DateOnly(2026, 1, 1).AddDays(i), TransactionType.Deposit, $"T{i}", Money.Usd(1m)))]));
+
+        var activity = await many.GetRecentActivityAsync(Dana, requested, TestContext.Current.CancellationToken);
+
+        activity.Count.ShouldBe(effective);
     }
 
     [Fact]
@@ -90,8 +120,23 @@ public sealed class AccountQueriesTests
         lookup.Status.ShouldBe(AccountLookupStatus.NotFound);
     }
 
-    private sealed class InMemoryAccounts(params Account[] accounts) : IAccountRepository
+    private sealed class InMemoryAccounts(Account[] accounts, Transaction[]? transactions = null) : IAccountRepository
     {
+        public InMemoryAccounts(params Account[] accounts)
+            : this(accounts, null)
+        {
+        }
+
+        public Task<IReadOnlyList<(Transaction Transaction, string AccountName)>> RecentTransactionsAsync(Guid clientId, int limit, CancellationToken cancellationToken = default)
+        {
+            var owned = accounts.Where(a => a.ClientId == clientId).ToDictionary(a => a.Id, a => a.Name);
+            return Task.FromResult<IReadOnlyList<(Transaction, string)>>([.. (transactions ?? [])
+                .Where(t => owned.ContainsKey(t.AccountId))
+                .OrderByDescending(t => t.Date).ThenByDescending(t => t.Id)
+                .Take(limit)
+                .Select(t => (t, owned[t.AccountId]))]);
+        }
+
         public Task<IReadOnlyList<Account>> ListForClientAsync(Guid clientId, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<Account>>([.. accounts.Where(a => a.ClientId == clientId)]);
 

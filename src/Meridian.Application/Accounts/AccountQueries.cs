@@ -74,6 +74,15 @@ public sealed class AccountQueries(IAccountRepository accounts)
         return new AccountLookup(AccountLookupStatus.Found, new AccountDetail(Summarize(account), holdings));
     }
 
+    public const int MaxActivityItems = 50;
+
+    /// <summary>Newest first; <paramref name="limit"/> is clamped to 1–<see cref="MaxActivityItems"/>.</summary>
+    public async Task<IReadOnlyList<ActivityView>> GetRecentActivityAsync(Guid clientId, int limit, CancellationToken cancellationToken = default)
+    {
+        var recent = await accounts.RecentTransactionsAsync(clientId, Math.Clamp(limit, 1, MaxActivityItems), cancellationToken).ConfigureAwait(false);
+        return [.. recent.Select(r => new ActivityView(r.Transaction.Id, r.Transaction.Date, r.AccountName, r.Transaction.Description, r.Transaction.Type, r.Transaction.Amount))];
+    }
+
     private static AccountSummary Summarize(Account account) =>
         new(account.Id, account.Name, account.Type, account.MaskedNumber, account.TotalValue, account.Cash, account.DayChange, account.DayChangePercent);
 
