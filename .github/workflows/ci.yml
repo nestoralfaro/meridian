@@ -207,6 +207,7 @@ jobs:
           targetdir: coverage-report
           reporttypes: MarkdownSummaryGithub;Html
           assemblyfilters: '+Meridian.*;+app*;-Meridian.*Tests*' # backend assemblies + Angular packages (app.*), minus tests
+          classfilters: '-Meridian.Infrastructure.Persistence.Migrations.*;-app.core.api*' # generated code (EF migrations, OpenAPI types) inflates the figure
           title: Meridian coverage
 
       - name: Publish to job summary
