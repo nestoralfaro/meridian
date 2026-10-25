@@ -1,4 +1,7 @@
 import { signal } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { AuthService } from '../../core/auth/auth.service';
@@ -47,7 +50,10 @@ describe('DashboardPage', () => {
     reload.mockReset();
     TestBed.configureTestingModule({
       providers: [
-        { provide: AuthService, useValue: { firstName: signal('Dana') } },
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(), // the activity list fetches its own data; not asserted here
+        { provide: AuthService, useValue: { firstName: signal('Dana'), user: signal(null) } },
         { provide: AccountsService, useValue: { state, reload } },
       ],
     });
@@ -135,5 +141,13 @@ describe('DashboardPage', () => {
 
     expect(page.querySelector('mer-allocation-chart')).not.toBeNull();
     expect(page.querySelector('mer-allocation-chart tbody')?.textContent).toContain('Funds');
+  });
+
+  it('shows recent activity with a link to all activity', () => {
+    state.set({ status: 'loaded', overview });
+    const page = render();
+
+    expect(page.querySelector('mer-activity-list')).not.toBeNull();
+    expect(page.querySelector('a[href="/activity"]')?.textContent).toContain('View all activity');
   });
 });

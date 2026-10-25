@@ -35,6 +35,19 @@ export type AccountSummaryResponse = {
   dayChangePercent: number;
 };
 
+export type ActivityItemResponse = {
+  id: string;
+  date: string;
+  accountName: string;
+  description: string;
+  type: string;
+  amount: MoneyResponse;
+};
+
+export type ActivityResponse = {
+  items: Array<ActivityItemResponse>;
+};
+
 export type AllocationSliceResponse = {
   assetClass: string;
   value: MoneyResponse;
@@ -121,6 +134,34 @@ export type GetVersionResponses = {
 };
 
 export type GetVersionResponse = GetVersionResponses[keyof GetVersionResponses];
+
+export type GetRecentActivityData = {
+  body?: never;
+  path?: never;
+  query?: {
+    limit?: number;
+  };
+  url: '/api/v1/activity';
+};
+
+export type GetRecentActivityErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type GetRecentActivityError = GetRecentActivityErrors[keyof GetRecentActivityErrors];
+
+export type GetRecentActivityResponses = {
+  /**
+   * OK
+   */
+  200: ActivityResponse;
+};
+
+export type GetRecentActivityResponse =
+  GetRecentActivityResponses[keyof GetRecentActivityResponses];
 
 export type GetAntiforgeryTokenData = {
   body?: never;

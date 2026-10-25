@@ -68,5 +68,13 @@
         }
       </ul>
     }
+
+    <section class="recent" aria-labelledby="recent-heading">
+      <div class="recent__header">
+        <h2 id="recent-heading">Recent activity</h2>
+        <a routerLink="/activity">View all activity</a>
+      </div>
+      <mer-activity-list [limit]="5" />
+    </section>
   }
 }

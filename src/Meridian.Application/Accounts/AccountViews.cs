@@ -36,3 +36,5 @@ public enum AccountLookupStatus
 }
 
 public sealed record AccountLookup(AccountLookupStatus Status, AccountDetail? Account);
+
+public sealed record ActivityView(Guid Id, DateOnly Date, string AccountName, string Description, TransactionType Type, Money Amount);

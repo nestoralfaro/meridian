@@ -35,6 +35,7 @@ var api = app.MapGroup("/api/v1");
 api.MapVersionEndpoints();
 api.MapAuthEndpoints();
 api.MapAccountEndpoints();
+api.MapActivityEndpoints();
 app.MapSpaFallback();
 
 app.Run();

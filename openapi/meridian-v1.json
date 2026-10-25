@@ -27,6 +27,48 @@
         }
       }
     },
+    "/api/v1/activity": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "The signed-in client\u0027s most recent transactions across their accounts, newest first (limit 1\u201350, default 5).",
+        "operationId": "GetRecentActivity",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/antiforgery": {
       "get": {
         "tags": [
@@ -491,6 +533,53 @@
           }
         }
       },
+      "ActivityItemResponse": {
+        "required": [
+          "id",
+          "date",
+          "accountName",
+          "description",
+          "type",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "accountName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          }
+        }
+      },
+      "ActivityResponse": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityItemResponse"
+            }
+          }
+        }
+      },
       "AllocationSliceResponse": {
         "required": [
           "assetClass",
@@ -745,10 +834,10 @@
       "name": "System"
     },
     {
-      "name": "Auth"
+      "name": "Accounts"
     },
     {
-      "name": "Accounts"
+      "name": "Auth"
     }
   ]
 }
