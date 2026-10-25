@@ -1,5 +1,10 @@
 # Meridian Client Portal
 
+[![ci](https://github.com/nestoralfaro/meridian/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nestoralfaro/meridian/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/nestoralfaro/meridian/actions/workflows/codeql/badge.svg?branch=main)](https://github.com/nestoralfaro/meridian/security/code-scanning)
+[![infra](https://github.com/nestoralfaro/meridian/actions/workflows/infra.yml/badge.svg?branch=main)](https://github.com/nestoralfaro/meridian/actions/workflows/infra.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A full-stack demo of a client-facing investing and planning portal: **Angular** SPA + **ASP.NET Core (.NET 10)** REST API, deployed to **Azure Container Apps** with infrastructure as code, CI/CD, and automated quality gates.
 
 > **🚧 Work in progress: Sprint 0 (infrastructure).** The application code has not been scaffolded yet. Follow along on the project board and in [`docs/adr`](docs/adr).

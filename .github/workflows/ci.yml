@@ -1,0 +1,134 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # Source Link stamps the commit into the build; tests assert on it
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - run: dotnet restore Meridian.slnx
+
+      - name: Format
+        run: dotnet format Meridian.slnx --verify-no-changes --no-restore
+
+      - name: Build (warnings are errors)
+        run: dotnet build Meridian.slnx -c Release --no-restore
+
+      - name: Test (unit, architecture, integration + Reqnroll specs against PostgreSQL via Testcontainers)
+        run: >
+          dotnet test --solution Meridian.slnx -c Release --no-build
+          --coverage --coverage-output-format cobertura --results-directory "$RUNNER_TEMP/test-results"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: backend-coverage
+          path: ${{ runner.temp }}/test-results/*.cobertura.xml
+          if-no-files-found: error
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/meridian-web
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: src/meridian-web/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Lint (TypeScript + template accessibility rules)
+        run: npm run lint
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Production build (bundle budgets enforced)
+        run: npm run build
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: frontend-coverage
+          path: src/meridian-web/coverage/meridian-web/cobertura-coverage.xml
+          if-no-files-found: error
+
+  container:
+    name: container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build image (not pushed; CD publishes it)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          build-args: SOURCE_REVISION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  coverage:
+    name: coverage report
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '*-coverage'
+          path: coverage
+
+      - name: Merge and summarize
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.11
+        with:
+          reports: coverage/**/*.xml
+          targetdir: coverage-report
+          reporttypes: MarkdownSummaryGithub;Html
+          assemblyfilters: '+Meridian.*;+app*;-Meridian.*Tests*' # backend assemblies + Angular packages (app.*), minus tests
+          title: Meridian coverage
+
+      - name: Publish to job summary
+        run: cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: coverage-report
