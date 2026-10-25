@@ -1,0 +1,46 @@
+<section class="allocation" aria-labelledby="allocation-heading">
+  <h2 id="allocation-heading">Asset allocation</h2>
+
+  <div class="allocation__body">
+    <svg class="donut" viewBox="0 0 42 42" aria-hidden="true" focusable="false">
+      @for (segment of segments(); track segment.assetClass) {
+        <circle
+          class="donut__segment"
+          cx="21"
+          cy="21"
+          r="15.91549"
+          fill="transparent"
+          stroke-width="7"
+          [attr.stroke]="segment.color"
+          [attr.stroke-dasharray]="segment.dasharray"
+          [attr.stroke-dashoffset]="segment.dashoffset"
+        />
+      }
+    </svg>
+
+    <table class="allocation__table">
+      <caption class="visually-hidden">
+        Asset allocation by value
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Asset class</th>
+          <th scope="col">Value</th>
+          <th scope="col">Share</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.label) {
+          <tr>
+            <th scope="row">
+              <span class="swatch" aria-hidden="true" [style.background]="row.color"></span
+              >{{ row.label }}
+            </th>
+            <td>{{ row.value }}</td>
+            <td>{{ row.percent }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

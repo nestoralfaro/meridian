@@ -31,11 +31,35 @@ public sealed class AccountQueriesTests
     }
 
     [Fact]
+    public async Task AllocationGroupsHoldingsAndCashByAssetClassLargestFirst()
+    {
+        var overview = await _queries.GetOverviewAsync(Dana, TestContext.Current.CancellationToken);
+
+        overview.Allocation.Select(s => (s.AssetClass, s.Value)).ShouldBe([
+            (AssetClass.Fund, Money.Usd(14718.00m)),  // MDTOT: 60 × 245.30
+            (AssetClass.Bond, Money.Usd(3206.00m)),   // MDBND: 50 × 64.12
+            (AssetClass.Cash, Money.Usd(1570.25m)),   // uninvested cash across both accounts
+            (AssetClass.Stock, Money.Usd(1287.50m)),  // ACME: 10 × 128.75
+        ]);
+    }
+
+    [Fact]
+    public async Task AllocationPercentagesAlwaysAddUpToExactly100()
+    {
+        // Rounded independently these would be 70.82 + 15.43 + 7.56 + 6.20 = 100.01%. Largest-remainder rounding fixes it.
+        var overview = await _queries.GetOverviewAsync(Dana, TestContext.Current.CancellationToken);
+
+        overview.Allocation.Sum(s => s.Percent).ShouldBe(100.00m);
+        overview.Allocation.Select(s => s.Percent).ShouldBe([70.82m, 15.43m, 7.56m, 6.19m]); // the two largest remainders (Bond, Cash) get the missing cents
+    }
+
+    [Fact]
     public async Task AClientWithNoAccountsGetsAnEmptyOverview()
     {
         var overview = await _queries.GetOverviewAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
         overview.Accounts.ShouldBeEmpty();
+        overview.Allocation.ShouldBeEmpty();
         overview.TotalValue.ShouldBe(Money.Zero("USD"));
         overview.DayChangePercent.ShouldBe(0m);
     }

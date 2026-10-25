@@ -12,7 +12,15 @@ public sealed record AccountSummary(
     Money DayChange,
     decimal DayChangePercent);
 
-public sealed record AccountsOverview(IReadOnlyList<AccountSummary> Accounts, Money TotalValue, Money DayChange, decimal DayChangePercent);
+/// <summary>One asset class's share of the client's total value. Percentages across slices add up to exactly 100.</summary>
+public sealed record AllocationSlice(AssetClass AssetClass, Money Value, decimal Percent);
+
+public sealed record AccountsOverview(
+    IReadOnlyList<AccountSummary> Accounts,
+    Money TotalValue,
+    Money DayChange,
+    decimal DayChangePercent,
+    IReadOnlyList<AllocationSlice> Allocation);
 
 public sealed record HoldingView(string Symbol, string Name, AssetClass AssetClass, decimal Quantity, Money Price, Money MarketValue, Money DayChange);
 

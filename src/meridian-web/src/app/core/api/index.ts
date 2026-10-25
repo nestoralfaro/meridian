@@ -4,6 +4,7 @@ export type {
   AccountDetailResponse,
   AccountsOverviewResponse,
   AccountSummaryResponse,
+  AllocationSliceResponse,
   ChangePasswordData,
   ChangePasswordError,
   ChangePasswordErrors,

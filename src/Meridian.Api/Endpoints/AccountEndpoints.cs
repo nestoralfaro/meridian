@@ -34,7 +34,8 @@ internal static class AccountEndpoints
             [.. overview.Accounts.Select(ToResponse)],
             MoneyResponse.From(overview.TotalValue),
             MoneyResponse.From(overview.DayChange),
-            overview.DayChangePercent));
+            overview.DayChangePercent,
+            [.. overview.Allocation.Select(s => new AllocationSliceResponse(s.AssetClass.ToString(), MoneyResponse.From(s.Value), s.Percent))]));
     }
 
     private static async Task<Results<Ok<AccountDetailResponse>, ProblemHttpResult>> GetAccountAsync(
@@ -78,8 +79,15 @@ internal sealed record MoneyResponse(decimal Amount, string Currency)
 internal sealed record AccountSummaryResponse(
     Guid Id, string Name, string Type, string MaskedNumber, MoneyResponse TotalValue, MoneyResponse Cash, MoneyResponse DayChange, decimal DayChangePercent);
 
+/// <param name="Percent">Share of the total value; the slices' percentages add up to exactly 100.</param>
+internal sealed record AllocationSliceResponse(string AssetClass, MoneyResponse Value, decimal Percent);
+
 internal sealed record AccountsOverviewResponse(
-    IReadOnlyList<AccountSummaryResponse> Accounts, MoneyResponse TotalValue, MoneyResponse DayChange, decimal DayChangePercent);
+    IReadOnlyList<AccountSummaryResponse> Accounts,
+    MoneyResponse TotalValue,
+    MoneyResponse DayChange,
+    decimal DayChangePercent,
+    IReadOnlyList<AllocationSliceResponse> Allocation);
 
 internal sealed record HoldingResponse(
     string Symbol, string Name, string AssetClass, decimal Quantity, MoneyResponse Price, MoneyResponse MarketValue, MoneyResponse DayChange);
