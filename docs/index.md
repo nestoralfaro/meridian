@@ -9,6 +9,11 @@ Source code: [github.com/nestoralfaro/meridian](https://github.com/nestoralfaro/
 
 > Fictional demo with synthetic data. Not affiliated with any financial institution; not investment advice.
 
+## Reports (latest `main`)
+
+- [End-to-end and accessibility tests (Playwright + axe)](reports/e2e/)
+- [Code coverage (backend + frontend)](reports/coverage/)
+
 ## Architecture Decision Records
 
 - [ADR-0001: Record architecture decisions](adr/0001-record-architecture-decisions.html)

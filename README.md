@@ -33,6 +33,7 @@ src/
   meridian-web/             Angular SPA (zoneless, standalone, strict TypeScript)
 tests/
   Meridian.ArchitectureTests/     layering rules enforced in CI (ArchUnitNET)
+  e2e/                            Playwright + axe against the running stack
   Meridian.Api.IntegrationTests/  host tests + Reqnroll acceptance specs, real PostgreSQL via Testcontainers
 db/          least-privilege grants for the application role (executed by tests)
 .github/     workflows, issue/PR templates, CODEOWNERS, Dependabot
@@ -94,6 +95,18 @@ Endpoints: `/health/live` (process up), `/health/ready` (database reachable **an
 - **Two roles, least privilege.** CD applies migrations with a self-contained migration bundle as the database **owner** (direct connection) *before* the new revision exists. The running app connects as **`meridian_app`**, which can read and write rows but can't change the schema. Grants: [`db/app-role-grants.sql`](db/app-role-grants.sql), the same file the integration tests execute.
 - **Append-only audit trail.** The app role can't `UPDATE`, `DELETE` or `TRUNCATE` `"AuditEvents"`, enforced by the database and covered by tests.
 - Migrations must be **backward compatible** (expand/contract): the previous revision keeps serving while they run.
+
+### End-to-end and accessibility tests
+
+[Playwright](tests/e2e) drives the running stack in **Chromium, WebKit and a mobile viewport**, and every visited page is scanned with **axe** for WCAG 2.2 AA. Any serious or critical violation fails CI.
+
+```bash
+docker compose up -d --build                    # the stack under test
+cd tests/e2e && npm ci && npx playwright install chromium webkit
+npm test                                        # BASE_URL=https://<env-url> npm test to run against a deployment
+```
+
+Latest reports from `main`: [Playwright](https://nestoralfaro.github.io/meridian/reports/e2e/) · [coverage](https://nestoralfaro.github.io/meridian/reports/coverage/)
 
 ### Observability
 
