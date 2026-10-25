@@ -1,6 +1,5 @@
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { httpResource } from '@angular/common/http';
+import { Injectable, computed } from '@angular/core';
 
 /** Mirrors the API's `GET /api/v1/version` response. */
 export interface BuildInfo {
@@ -8,12 +7,16 @@ export interface BuildInfo {
   readonly commit: string;
 }
 
+/**
+ * Server state as a signal (ADR-0007): `httpResource` loads once and exposes value/error/loading as signals.
+ * Build info is decorative, so a failed request yields `null` rather than an error the UI must handle.
+ */
 @Injectable({ providedIn: 'root' })
 export class BuildInfoService {
-  private readonly http = inject(HttpClient);
+  /** Same origin as the SPA, so a relative URL is enough (ADR-0004). */
+  private readonly build = httpResource<BuildInfo>(() => '/api/v1/version');
 
-  /** The API is served from the same origin as the SPA, so a relative URL is enough. */
-  get(): Observable<BuildInfo> {
-    return this.http.get<BuildInfo>('/api/v1/version');
-  }
+  readonly shortCommit = computed(() =>
+    this.build.hasValue() ? this.build.value().commit.slice(0, 7) : null,
+  );
 }

@@ -127,6 +127,7 @@ Multi-stage [`Dockerfile`](Dockerfile): Node builds the SPA → .NET SDK publish
 - [ADR-0004](docs/adr/0004-single-origin-hosting.md): Serve the SPA and the API from a single origin
 - [ADR-0005](docs/adr/0005-postgresql-on-neon.md): PostgreSQL on Neon, through EF Core
 - [ADR-0006](docs/adr/0006-solution-structure.md): Layered solution structure, enforced by tests
+- [ADR-0007](docs/adr/0007-angular-state-with-signals.md): Angular state with signals and resources; NgRx SignalStore deferred
 - [ADR-0008](docs/adr/0008-immutable-revision-deployments.md): Deploy every change as an immutable, verified revision
 
 ## How we work

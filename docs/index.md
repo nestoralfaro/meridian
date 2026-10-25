@@ -22,6 +22,7 @@ Source code: [github.com/nestoralfaro/meridian](https://github.com/nestoralfaro/
 - [ADR-0004: Serve the SPA and the API from a single origin](adr/0004-single-origin-hosting.html)
 - [ADR-0005: PostgreSQL on Neon, through EF Core](adr/0005-postgresql-on-neon.html)
 - [ADR-0006: Layered solution structure, enforced by tests](adr/0006-solution-structure.html)
+- [ADR-0007: Angular state with signals and resources; NgRx SignalStore deferred](adr/0007-angular-state-with-signals.html)
 - [ADR-0008: Deploy every change as an immutable, verified revision](adr/0008-immutable-revision-deployments.html)
 
 ## Runbooks

@@ -17,16 +17,18 @@ describe('App shell', () => {
 
   afterEach(() => http.verify());
 
-  async function render(version: object | 'error' | 'ignore' = 'ignore'): Promise<HTMLElement> {
+  const aBuild = { version: '1.0.0', commit: '0123456789abcdef0123456789abcdef01234567' };
+
+  /** Renders the shell and answers its build-info request (an unanswered httpResource keeps the app unstable). */
+  async function render(version: object | 'error' = aBuild): Promise<HTMLElement> {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
-    const requests = http.match('/api/v1/version');
+    TestBed.tick();
+    const request = http.expectOne('/api/v1/version');
     if (version === 'error') {
-      requests.forEach((r) =>
-        r.flush('unavailable', { status: 503, statusText: 'Service Unavailable' }),
-      );
-    } else if (version !== 'ignore') {
-      requests.forEach((r) => r.flush(version));
+      request.flush('unavailable', { status: 503, statusText: 'Service Unavailable' });
+    } else {
+      request.flush(version);
     }
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
