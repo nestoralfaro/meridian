@@ -6,7 +6,7 @@
 # Stages: web (Node builds the SPA) → api (SDK publishes the API) → runtime (chiseled, non-root, no shell/SDK).
 
 # ---- 1. Build the Angular SPA ------------------------------------------------
-FROM --platform=$BUILDPLATFORM node:24-alpine AS web
+FROM --platform=$BUILDPLATFORM node:25-alpine AS web
 WORKDIR /src/meridian-web
 # Dependencies first so this layer is cached until package*.json changes.
 COPY src/meridian-web/package.json src/meridian-web/package-lock.json ./
