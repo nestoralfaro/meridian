@@ -59,6 +59,9 @@ test.describe('app shell', () => {
       .getByRole('navigation', { name: 'Primary' })
       .getByRole('link', { name: 'Home' })
       .click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Welcome to Meridian' }),
+    ).toBeVisible();
 
     await page
       .getByRole('navigation', { name: 'Primary' })

@@ -3,7 +3,7 @@ name: deploy
 # Reusable blue/green deployment of one image to one environment (docs/adr/0008-immutable-revision-deployments.md):
 #   0. Database migrations are applied (owner role) while the current revision keeps serving.
 #   1. Bicep deploys a new, uniquely named revision while traffic stays pinned to the current revision (0% to the new one).
-#   2. The new revision is smoke-tested on its own revision URL.
+#   2. The new revision is smoke-tested on its own revision URL (staging also runs the full Playwright + axe suite).
 #   3. Pass → 100% of traffic moves to it; the previous revision stays active for instant rollback.
 #      Fail → traffic never moves, the new revision is deactivated, and the job fails with a summary.
 on:
@@ -132,10 +132,39 @@ jobs:
             --only-show-errors -o none
 
       - name: Smoke test the new revision on its own URL
+        id: smoke
         run: |
           fqdn=$(az containerapp revision show -g "$RESOURCE_GROUP" -n "$APP" \
             --revision "${{ steps.current.outputs.new }}" --query properties.fqdn -o tsv)
+          echo "url=https://${fqdn}" >> "$GITHUB_OUTPUT"
           scripts/smoke-test.sh "https://${fqdn}" "$COMMIT"
+
+      # Staging only: the full browser suite against the new revision (real HTTPS, real Neon data) before it gets
+      # traffic. Production receives the exact image that passed this, and is smoke-tested only.
+      - uses: actions/setup-node@v7
+        if: inputs.environment == 'staging'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+
+      - name: End-to-end + accessibility tests against the new revision
+        if: inputs.environment == 'staging'
+        working-directory: tests/e2e
+        env:
+          BASE_URL: ${{ steps.smoke.outputs.url }}
+          CI: 'true'
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium webkit
+          npx playwright test
+
+      - uses: actions/upload-artifact@v7
+        if: failure() && inputs.environment == 'staging'
+        with:
+          name: playwright-report-staging-revision
+          path: tests/e2e/playwright-report
+          retention-days: 14
 
       - name: Promote (shift 100% of traffic)
         id: promote
