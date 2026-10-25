@@ -15,6 +15,17 @@ on:
         description: Full commit SHA; the image ghcr.io/<repo>:<commit> must exist.
         type: string
         required: true
+  # Manual redeploy of any previously built commit (e.g. roll forward/back to a known build). Same verification and gates.
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        required: true
+      commit:
+        description: Full commit SHA; the image ghcr.io/<repo>:<commit> must exist.
+        type: string
+        required: true
 
 permissions:
   contents: read
