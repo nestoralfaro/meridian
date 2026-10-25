@@ -123,3 +123,14 @@
     box-shadow: inset 0 2px 0 var(--color-primary);
   }
 }
+
+.session {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 599.98px) {
+  .session__user {
+    display: none; // the bottom bar leaves no room; the dashboard greets the user by name
+  }
+}

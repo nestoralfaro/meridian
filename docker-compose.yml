@@ -42,6 +42,7 @@ services:
     environment:
       ConnectionStrings__Meridian: "Host=db;Port=5432;Database=meridian;Username=meridian;Password=meridian-local-dev"
       Demo__Enabled: "true" # seed the synthetic personas (Dana, Raj) on startup
+      Auth__SecureCookies: "false" # local stack is plain HTTP; Azure (HTTPS) keeps the default: Secure cookies
     ports:
       - "8080:8080"
     depends_on:

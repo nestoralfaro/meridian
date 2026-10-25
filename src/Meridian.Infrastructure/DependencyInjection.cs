@@ -1,6 +1,10 @@
 using Meridian.Application.DemoData;
+using Meridian.Application.Identity;
 using Meridian.Infrastructure.DemoData;
+using Meridian.Infrastructure.Identity;
 using Meridian.Infrastructure.Persistence;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +50,27 @@ public static class DependencyInjection
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IDemoData, DemoDataSeeder>();
+
+        services.AddIdentityCore<ApplicationUser>(options =>
+            {
+                options.User.RequireUniqueEmail = true;
+                // NIST SP 800-63B: length over composition rules.
+                options.Password.RequiredLength = 12;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.AllowedForNewUsers = true;
+            })
+            .AddEntityFrameworkStores<MeridianDbContext>();
+        services.AddScoped<IIdentityService, IdentityService>();
+
+        // Keys that sign session cookies and antiforgery tokens, shared by every replica.
+        services.AddDataProtection()
+            .SetApplicationName("Meridian")
+            .PersistKeysToDbContext<MeridianDbContext>();
 
         services.AddHealthChecks()
             .AddCheck<DatabaseHealthCheck>("database", tags: [ReadinessTag])

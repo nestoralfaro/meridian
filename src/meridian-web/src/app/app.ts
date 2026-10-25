@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DOCUMENT, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { RouteFocusService } from './core/a11y/route-focus.service';
+import { AuthService } from './core/auth/auth.service';
 import { BuildInfoService } from './core/build-info/build-info.service';
 
 interface NavItem {
@@ -26,6 +27,7 @@ export class App {
 
   /** Build info is decorative: if the API is unavailable the footer simply omits it. */
   protected readonly shortCommit = inject(BuildInfoService).shortCommit;
+  protected readonly auth = inject(AuthService);
 
   constructor() {
     inject(RouteFocusService).start();

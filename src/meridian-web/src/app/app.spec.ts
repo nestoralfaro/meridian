@@ -24,6 +24,7 @@ describe('App shell', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     TestBed.tick();
+    http.expectOne('/api/v1/auth/me').flush(null, { status: 401, statusText: 'Unauthorized' });
     const request = http.expectOne('/api/v1/version');
     if (version === 'error') {
       request.flush('unavailable', { status: 503, statusText: 'Service Unavailable' });

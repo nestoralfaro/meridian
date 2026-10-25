@@ -87,6 +87,14 @@ To serve a real Angular build from the API without Docker: `(cd src/meridian-web
 
 Endpoints: `/health/live` (process up), `/health/ready` (database reachable **and** schema up to date), `/api/v1/version` (build and commit).
 
+### Sign-in and session security
+
+- **Cookie session, no tokens in the browser**: ASP.NET Core Identity issues an `HttpOnly`, `Secure`, `SameSite=Strict` cookie with a 15-minute sliding idle timeout. The API answers 401/403; it never redirects.
+- **CSRF protection**: antiforgery tokens on every state-changing request, using the cookie and header names Angular's `HttpClient` sends automatically (`XSRF-TOKEN` → `X-XSRF-TOKEN`).
+- **Demo personas**: "Sign in as Dana / Raj" without credentials. Demo accounts can't change credentials.
+- **Data Protection keys** (which sign cookies and tokens) live in PostgreSQL, so sessions survive restarts and work across replicas.
+- Identity stays inside Infrastructure behind an Application port; the API only turns a verified user into claims and a cookie.
+
 ### Demo data
 
 - Two **fictional personas**, Dana Lee (`dana@meridian.test`, new investor) and Raj Mehta (`raj@meridian.test`, pre-retiree), with brokerage, IRA and savings accounts, holdings in fictional securities (`MDTOT`, `MDINT`, `MDBND`, `MDMMF`, `ACME`, `GLBX`) and 90 days of activity.

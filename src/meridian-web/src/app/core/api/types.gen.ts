@@ -4,6 +4,40 @@ export type ClientOptions = {
   baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type ChangePasswordRequest = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export type DemoSignInRequest = {
+  persona: string;
+};
+
+export type HttpValidationProblemDetails = {
+  type?: null | string;
+  title?: null | string;
+  status?: null | number | string;
+  detail?: null | string;
+  instance?: null | string;
+  errors?: {
+    [key: string]: Array<string>;
+  };
+};
+
+export type MeResponse = {
+  displayName: string;
+  email: string;
+  isDemo: boolean;
+};
+
+export type ProblemDetails = {
+  type?: null | string;
+  title?: null | string;
+  status?: null | number | string;
+  detail?: null | string;
+  instance?: null | string;
+};
+
 export type VersionResponse = {
   version: string;
   commit: string;
@@ -24,3 +58,107 @@ export type GetVersionResponses = {
 };
 
 export type GetVersionResponse = GetVersionResponses[keyof GetVersionResponses];
+
+export type GetAntiforgeryTokenData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/antiforgery';
+};
+
+export type GetAntiforgeryTokenResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type GetAntiforgeryTokenResponse =
+  GetAntiforgeryTokenResponses[keyof GetAntiforgeryTokenResponses];
+
+export type GetCurrentUserData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/me';
+};
+
+export type GetCurrentUserErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type GetCurrentUserError = GetCurrentUserErrors[keyof GetCurrentUserErrors];
+
+export type GetCurrentUserResponses = {
+  /**
+   * OK
+   */
+  200: MeResponse;
+};
+
+export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
+
+export type DemoSignInData = {
+  body: DemoSignInRequest;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/demo-sign-in';
+};
+
+export type DemoSignInErrors = {
+  /**
+   * Bad Request
+   */
+  400: ProblemDetails;
+  /**
+   * Not Found
+   */
+  404: ProblemDetails;
+};
+
+export type DemoSignInError = DemoSignInErrors[keyof DemoSignInErrors];
+
+export type DemoSignInResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type DemoSignInResponse = DemoSignInResponses[keyof DemoSignInResponses];
+
+export type ChangePasswordData = {
+  body: ChangePasswordRequest;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/change-password';
+};
+
+export type ChangePasswordErrors = {
+  /**
+   * Bad Request
+   */
+  400: HttpValidationProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+  /**
+   * Forbidden
+   */
+  403: ProblemDetails;
+};
+
+export type ChangePasswordError = ChangePasswordErrors[keyof ChangePasswordErrors];
+
+export type ChangePasswordResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type ChangePasswordResponse = ChangePasswordResponses[keyof ChangePasswordResponses];
