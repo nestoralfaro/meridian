@@ -42,3 +42,8 @@ updates:
       interval: weekly
     commit-message:
       prefix: build
+    ignore:
+      # The build stage tracks the Node LTS pinned in .nvmrc (Angular CLI 22: ^22.22.3 || ^24.15.0 || >=26).
+      # Odd-numbered majors are non-LTS; Node moves deliberately with .nvmrc, not via Dependabot.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']

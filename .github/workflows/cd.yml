@@ -1,0 +1,95 @@
+name: cd
+
+# Every merge to main: build the image once → deploy it to staging as a verified, blue/green revision.
+# Production: run this workflow manually ("Run workflow") to promote an image that already passed staging;
+# the production environment requires approval.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Full commit SHA to promote to production (its image must already exist). Defaults to the selected branch head.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  image:
+    name: build & publish image
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write      # push to GHCR
+      id-token: write      # sign the provenance attestation
+      attestations: write  # store it
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:main
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=Meridian Client Portal
+          build-args: SOURCE_REVISION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Attest build provenance (SLSA)
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - run: |
+          {
+            echo "### Image"
+            echo "\`${IMAGE_NAME}:${GITHUB_SHA}\`"
+            echo "digest \`${{ steps.build.outputs.digest }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  staging:
+    needs: image
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      commit: ${{ github.sha }}
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+
+  production:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      commit: ${{ inputs.commit || github.sha }}
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
