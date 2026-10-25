@@ -1,0 +1,34 @@
+name: demo-data
+
+# Resets an environment's synthetic demo portfolio on demand. (Each running app also resets its own data once it's
+# more than a day old; this is for "reset it now", e.g. before a demo.) Runs as the least-privilege app role.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment whose demo data to reset
+        type: choice
+        options: [staging, production]
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  reset:
+    name: reset demo data (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Reset
+        env:
+          ConnectionStrings__Meridian: ${{ secrets.DB_CONNECTION }}
+        run: dotnet run --project src/Meridian.Worker -c Release -- demo-data reset
+
+      - run: echo "### Demo data reset in ${{ inputs.environment }}" >> "$GITHUB_STEP_SUMMARY"

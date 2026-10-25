@@ -1,3 +1,5 @@
+using Meridian.Domain;
+using Meridian.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Meridian.Infrastructure.Persistence;
@@ -8,9 +10,17 @@ internal sealed class MeridianDbContext(DbContextOptions<MeridianDbContext> opti
     public const string ApplicationRole = "meridian_app";
 
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<Client> Clients => Set<Client>();
+    public DbSet<Security> Securities => Set<Security>();
+    public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<Position> Positions => Set<Position>();
+    public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<DemoDataState> DemoDataState => Set<DemoDataState>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeridianDbContext).Assembly);
+
         modelBuilder.Entity<AuditEvent>(audit =>
         {
             audit.ToTable("AuditEvents");
