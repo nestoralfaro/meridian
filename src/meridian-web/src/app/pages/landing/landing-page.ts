@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
   selector: 'mer-landing-page',
   imports: [RouterLink],
   template: `
-    <h2>Welcome to Meridian</h2>
+    <h1>Welcome to Meridian</h1>
     <p>Plan, invest and track your goals in one place.</p>
     <p><a routerLink="/dashboard">Go to your dashboard</a></p>
   `,

@@ -1,8 +1,31 @@
+<a class="skip-link" href="#main-content" (click)="skipToMain($event)">Skip to main content</a>
+
 <header class="shell-header">
-  <h1>Meridian Client Portal</h1>
+  <div class="shell-header__inner">
+    <a class="brand" routerLink="/" aria-label="Meridian home">
+      <span class="brand__mark" aria-hidden="true">◆</span>
+      <span class="brand__name">Meridian</span>
+    </a>
+
+    <nav class="primary-nav" aria-label="Primary">
+      <ul>
+        @for (item of navItems; track item.path) {
+          <li>
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="is-active"
+              [routerLinkActiveOptions]="{ exact: item.exact }"
+              ariaCurrentWhenActive="page"
+              >{{ item.label }}</a
+            >
+          </li>
+        }
+      </ul>
+    </nav>
+  </div>
 </header>
 
-<main class="shell-main">
+<main id="main-content" class="shell-main" tabindex="-1">
   <router-outlet />
 </main>
 

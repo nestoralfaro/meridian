@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
   selector: 'mer-not-found-page',
   imports: [RouterLink],
   template: `
-    <h2>Page not found</h2>
+    <h1>Page not found</h1>
     <p>The page you're looking for doesn't exist. <a routerLink="/">Return home</a></p>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
