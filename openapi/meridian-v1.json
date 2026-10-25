@@ -281,10 +281,221 @@
           }
         }
       }
+    },
+    "/api/v1/accounts": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "The signed-in client\u0027s accounts with balances, day change and totals.",
+        "operationId": "GetAccountsOverview",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountsOverviewResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{accountId}": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "One of the signed-in client\u0027s accounts with its holdings. Another client\u0027s account is indistinguishable from a missing one.",
+        "operationId": "GetAccount",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AccountDetailResponse": {
+        "required": [
+          "id",
+          "name",
+          "type",
+          "maskedNumber",
+          "totalValue",
+          "cash",
+          "dayChange",
+          "dayChangePercent",
+          "holdings"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "maskedNumber": {
+            "type": "string"
+          },
+          "totalValue": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "cash": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "dayChange": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "dayChangePercent": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "holdings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HoldingResponse"
+            }
+          }
+        }
+      },
+      "AccountsOverviewResponse": {
+        "required": [
+          "accounts",
+          "totalValue",
+          "dayChange",
+          "dayChangePercent"
+        ],
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountSummaryResponse"
+            }
+          },
+          "totalValue": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "dayChange": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "dayChangePercent": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "AccountSummaryResponse": {
+        "required": [
+          "id",
+          "name",
+          "type",
+          "maskedNumber",
+          "totalValue",
+          "cash",
+          "dayChange",
+          "dayChangePercent"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "maskedNumber": {
+            "type": "string"
+          },
+          "totalValue": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "cash": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "dayChange": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "dayChangePercent": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "ChangePasswordRequest": {
         "required": [
           "currentPassword",
@@ -308,6 +519,46 @@
         "properties": {
           "persona": {
             "type": "string"
+          }
+        }
+      },
+      "HoldingResponse": {
+        "required": [
+          "symbol",
+          "name",
+          "assetClass",
+          "quantity",
+          "price",
+          "marketValue",
+          "dayChange"
+        ],
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetClass": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "price": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "marketValue": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "dayChange": {
+            "$ref": "#/components/schemas/MoneyResponse"
           }
         }
       },
@@ -374,6 +625,26 @@
           },
           "isDemo": {
             "type": "boolean"
+          }
+        }
+      },
+      "MoneyResponse": {
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
           }
         }
       },
@@ -472,6 +743,9 @@
     },
     {
       "name": "Auth"
+    },
+    {
+      "name": "Accounts"
     }
   ]
 }
