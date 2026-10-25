@@ -7,7 +7,9 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Npgsql.OpenTelemetry" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
 </Project>

@@ -36,6 +36,7 @@ tests/
   e2e/                            Playwright + axe against the running stack
   Meridian.Api.IntegrationTests/  host tests + Reqnroll acceptance specs, real PostgreSQL via Testcontainers
 db/          least-privilege grants for the application role (executed by tests)
+openapi/     the committed API contract (OpenAPI 3.1)
 .github/     workflows, issue/PR templates, CODEOWNERS, Dependabot
 infra/       Bicep: Log Analytics, Application Insights, Container Apps, budget
 docs/adr/    Architecture Decision Records
@@ -84,6 +85,19 @@ dotnet run --project src/Meridian.Api          # http://localhost:5090
 To serve a real Angular build from the API without Docker: `(cd src/meridian-web && npm run build)`, then `dotnet run --project src/Meridian.Api --launch-profile single-origin`.
 
 Endpoints: `/health/live` (process up), `/health/ready` (database reachable **and** schema up to date), `/api/v1/version` (build and commit).
+
+### API contract
+
+- Interactive reference at **`/docs`** (Scalar); OpenAPI document at **`/openapi/v1.json`** ([staging](https://meridian-staging.whitefield-3aacc510.eastus2.azurecontainerapps.io/docs)).
+- The contract is committed at [`openapi/meridian-v1.json`](openapi/meridian-v1.json), so API changes are visible in code review:
+  - a backend test fails if the API and the committed contract differ;
+  - the SPA's TypeScript types are **generated** from it (`src/meridian-web/src/app/core/api`), and CI fails if they drift;
+  - **oasdiff** fails a PR that makes a breaking change against `main`.
+- After changing an endpoint:
+  ```bash
+  MERIDIAN_UPDATE_OPENAPI=1 dotnet test --project tests/Meridian.Api.IntegrationTests -- --filter-class "*OpenApiContractTests"
+  (cd src/meridian-web && npm run api:generate)
+  ```
 
 ### Database and migrations
 

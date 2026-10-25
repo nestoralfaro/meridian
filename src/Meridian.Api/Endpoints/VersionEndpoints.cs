@@ -10,6 +10,7 @@ internal static class VersionEndpoints
     {
         endpoints.MapGet("/version", () => TypedResults.Ok(Current))
             .WithName("GetVersion")
+            .WithTags("System")
             .WithSummary("Identifies the running build (semantic version and git commit).");
         return endpoints;
     }
