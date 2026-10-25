@@ -1,4 +1,44 @@
-/* Global styles. Design tokens and themes arrive with the app shell story (#23). */
+/* Design tokens: one source for color, spacing and type. Light and dark themes meet WCAG 2.2 AA contrast. */
+:root {
+  color-scheme: light dark;
+
+  --color-bg: #f6f8fa;
+  --color-surface: #ffffff;
+  --color-text: #1f2328;
+  --color-text-muted: #57606a;
+  --color-primary: #0b5cad;
+  --color-on-primary: #ffffff;
+  --color-border: #d0d7de;
+  --color-hover: #eef2f6;
+  --color-focus: #0b5cad;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --radius: 0.375rem;
+
+  --font-size-sm: 0.875rem;
+  --font-size-lg: 1.125rem;
+  --content-max-width: 72rem;
+  --bottom-nav-height: 3.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0d1117;
+    --color-surface: #161b22;
+    --color-text: #e6edf3;
+    --color-text-muted: #9198a1;
+    --color-primary: #6cb6ff;
+    --color-on-primary: #0d1117;
+    --color-border: #30363d;
+    --color-hover: #21262d;
+    --color-focus: #6cb6ff;
+  }
+}
+
 *,
 *::before,
 *::after {
@@ -7,6 +47,8 @@
 
 body {
   margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
   font-family:
     system-ui,
     -apple-system,
@@ -14,4 +56,30 @@ body {
     Roboto,
     sans-serif;
   line-height: 1.5;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+/* Visible keyboard focus everywhere (mouse clicks don't show it). */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+h1 {
+  margin-block: 0 var(--space-4);
+  font-size: 1.75rem;
+  line-height: 1.25;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
 }

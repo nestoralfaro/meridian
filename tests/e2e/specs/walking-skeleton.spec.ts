@@ -5,7 +5,8 @@ test.describe('walking skeleton', () => {
     await page.goto('/');
 
     await expect(page).toHaveTitle('Meridian Client Portal');
-    await expect(page.getByRole('heading', { level: 1, name: 'Meridian Client Portal' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Meridian home' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Welcome to Meridian' })).toBeVisible();
     await expect(page.getByRole('main')).toBeVisible();
     await expect(page.getByTestId('demo-disclaimer')).toContainText('Fictional demo');
     await expectNoSeriousA11yViolations(page);
@@ -25,7 +26,7 @@ test.describe('walking skeleton', () => {
 
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page).toHaveTitle('Dashboard | Meridian');
-    await expect(page.getByRole('heading', { level: 2, name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
     await expectNoSeriousA11yViolations(page);
   });
 
@@ -33,14 +34,14 @@ test.describe('walking skeleton', () => {
     const response = await page.goto('/dashboard');
 
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole('heading', { level: 2, name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeVisible();
   });
 
   test('unknown routes show an accessible not-found page', async ({ page }) => {
     await page.goto('/no-such-page');
 
     await expect(page).toHaveTitle('Page not found | Meridian');
-    await expect(page.getByRole('heading', { level: 2, name: 'Page not found' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
     await expectNoSeriousA11yViolations(page);
   });
 });
