@@ -9,5 +9,13 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
     <PackageReference Include="Npgsql.DependencyInjection" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <!-- Design-time only (dotnet ef migrations); never flows into the API's runtime dependencies. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Integration tests apply migrations and exercise the persistence model directly. -->
+    <InternalsVisibleTo Include="Meridian.Api.IntegrationTests" />
   </ItemGroup>
 </Project>

@@ -45,3 +45,5 @@ The pipeline already kept traffic on the previous revision and deactivated the n
 | `/health/ready` 503 | Database unreachable or wrong `DB_CONNECTION` secret | Check Neon status and the environment secret |
 | Commit mismatch | Wrong image tag or caching in front of the revision URL | Compare the image on the revision with the expected SHA |
 | Image pull error | GHCR package not public, or tag missing | Package settings → visibility *Public*; confirm the `image` job pushed the tag |
+| "Apply database migrations" failed | Migration error, or wrong `DB_MIGRATIONS` secret | Nothing was deployed; fix forward with a new migration. Never edit an applied migration |
+| `/health/ready` reports `schema` Unhealthy | The new revision's migrations weren't applied | Re-run the deployment; the migration step runs first |

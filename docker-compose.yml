@@ -1,4 +1,4 @@
-# Local, production-like stack: the app image + PostgreSQL 17 (the same major version as Neon).
+# Local, production-like stack: PostgreSQL 17 (the same major version as Neon) → migrations → the app image.
 #
 #   SOURCE_REVISION=$(git rev-parse HEAD) docker compose up --build
 #   open http://localhost:8080
@@ -23,6 +23,16 @@ services:
       timeout: 3s
       retries: 15
 
+  migrations:
+    build:
+      context: .
+      target: migrations
+    image: meridian-migrations:local
+    command: ["--connection", "Host=db;Port=5432;Database=meridian;Username=meridian;Password=meridian-local-dev;GSS Encryption Mode=Disable"]
+    depends_on:
+      db:
+        condition: service_healthy
+
   app:
     build:
       context: .
@@ -34,8 +44,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      db:
-        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
     # The chiseled image has no shell or curl, so there is no container HEALTHCHECK here.
     # Probes hit /health/live and /health/ready from outside (Azure Container Apps, #12).
 

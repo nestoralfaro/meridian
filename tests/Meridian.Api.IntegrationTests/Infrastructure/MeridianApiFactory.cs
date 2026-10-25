@@ -21,4 +21,7 @@ public sealed class MeridianApiFactory(string connectionString) : WebApplication
         new(await TestDatabase.GetConnectionStringAsync().ConfigureAwait(false));
 
     public static MeridianApiFactory WithUnreachableDatabase() => new(TestDatabase.Unreachable);
+
+    public static async Task<MeridianApiFactory> WithUnmigratedDatabaseAsync() =>
+        new(await TestDatabase.GetUnmigratedConnectionStringAsync().ConfigureAwait(false));
 }

@@ -53,9 +53,11 @@ public sealed class LayeringTests
             .NotDependOnAny(HostLayer)
             .Check(Architecture);
 
+    /// <remarks>EF Core generates migration classes as public; they're generated code, never referenced by hosts.</remarks>
     [Fact]
     public void InfrastructureExposesOnlyItsCompositionEntryPoint() =>
-        Types().That().Are(InfrastructureLayer).And().ArePublic().Should()
+        Types().That().Are(InfrastructureLayer).And().ArePublic()
+            .And().DoNotResideInNamespace("Meridian.Infrastructure.Persistence.Migrations").Should()
             .HaveFullName(typeof(Infrastructure.DependencyInjection).FullName!)
             .Check(Architecture);
 

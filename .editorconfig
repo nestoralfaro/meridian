@@ -16,3 +16,7 @@ quote_type = single
 
 [*.md]
 trim_trailing_whitespace = false
+
+# EF Core migrations are generated code (dotnet ef); analyzers and formatting rules do not apply.
+[src/Meridian.Infrastructure/Persistence/Migrations/*.cs]
+generated_code = true
