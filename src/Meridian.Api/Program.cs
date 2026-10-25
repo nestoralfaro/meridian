@@ -5,13 +5,15 @@ using Meridian.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddProblemDetails();
+builder.AddObservability();
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseTraceIdHeader();
+app.UseExceptionHandler(); // unhandled exceptions → 500 ProblemDetails with traceId; details stay in logs
 app.UseStatusCodePages();
 app.UseSpaStaticFiles();
 

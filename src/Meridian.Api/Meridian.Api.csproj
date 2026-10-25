@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-  <!-- HTTP host and composition root. Will also serve the Angular SPA (#9). -->
+  <!-- HTTP host and composition root. Also serves the Angular SPA (ADR-0004). -->
   <ItemGroup>
     <ProjectReference Include="..\Meridian.Application\Meridian.Application.csproj" />
     <ProjectReference Include="..\Meridian.Infrastructure\Meridian.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+    <PackageReference Include="Npgsql.OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
 </Project>
