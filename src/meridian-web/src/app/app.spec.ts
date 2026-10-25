@@ -93,4 +93,19 @@ describe('App shell', () => {
 
     expect(page.querySelector('[data-testid="build-info"]')).toBeNull();
   });
+
+  it('offers "Sign out" when signed in', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    TestBed.tick();
+    http
+      .expectOne('/api/v1/auth/me')
+      .flush({ displayName: 'Dana Lee', email: 'dana@meridian.test', isDemo: true });
+    http.expectOne('/api/v1/version').flush(aBuild);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('header button')?.textContent?.trim()).toBe('Sign out');
+  });
 });

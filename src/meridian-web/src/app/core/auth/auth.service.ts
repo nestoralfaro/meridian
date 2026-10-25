@@ -1,5 +1,6 @@
 import { HttpClient, HttpErrorResponse, httpResource } from '@angular/common/http';
 import { Injectable, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import type { MeResponse, RegisterRequest, SignInRequest } from '../api';
 
@@ -19,6 +20,7 @@ export type CredentialResult =
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   private readonly session = httpResource<MeResponse>(() => '/api/v1/auth/me');
 
   /** 'loading' until /me has answered, so guards never decide on a guess. */
@@ -43,6 +45,20 @@ export class AuthService {
     // Antiforgery tokens are bound to the identity: get a new one for the signed-in user.
     await this.refreshAntiforgeryToken();
     this.session.reload();
+  }
+
+  /** Ends the session on the server, then returns to sign-in (with the reason, e.g. "idle", when there is one). */
+  async signOut(reason?: 'idle'): Promise<void> {
+    await this.refreshAntiforgeryToken().catch(() => undefined);
+    await firstValueFrom(this.http.post<void>('/api/v1/auth/sign-out', {})).catch(() => undefined);
+    await this.refreshAntiforgeryToken().catch(() => undefined);
+    this.session.reload();
+    await this.router.navigate(['/sign-in'], { queryParams: reason ? { reason } : {} });
+  }
+
+  /** Any authenticated request renews the sliding session cookie on the server. */
+  async extendSession(): Promise<void> {
+    await firstValueFrom(this.http.get('/api/v1/auth/me'));
   }
 
   register(request: RegisterRequest): Promise<CredentialResult> {

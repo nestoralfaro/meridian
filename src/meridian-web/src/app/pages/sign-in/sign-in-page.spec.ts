@@ -129,4 +129,11 @@ describe('SignInPage', () => {
       'Create an account',
     );
   });
+
+  it('explains when the visitor was signed out for inactivity', async () => {
+    const harness = await RouterTestingHarness.create('/sign-in?reason=idle');
+
+    const status = harness.routeNativeElement!.querySelector('[role="status"]');
+    expect(status?.textContent).toContain('signed out after 15 minutes of inactivity');
+  });
 });

@@ -1,5 +1,12 @@
 <h1>Sign in</h1>
 
+@if (signedOutForInactivity) {
+  <p class="notice" role="status">
+    You were signed out after 15 minutes of inactivity to protect your account. Please sign in
+    again.
+  </p>
+}
+
 <section class="demo" aria-labelledby="demo-heading">
   <h2 id="demo-heading">Explore as a demo client</h2>
   <p>No account needed. Each demo client has synthetic accounts and activity, reset daily.</p>
