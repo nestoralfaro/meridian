@@ -6,6 +6,7 @@ using Meridian.Api.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
@@ -106,6 +107,25 @@ public sealed partial class ObservabilityTests
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         TraceIdOf(response).ShouldMatch("^[0-9a-f]{32}$");
+    }
+
+    [Theory]
+    [InlineData("Npgsql")]
+    [InlineData("Microsoft.EntityFrameworkCore.Database.Command")]
+    public void DatabaseCommandsAreNotLoggedAtInformationLevel(string category)
+    {
+        // Readiness probes query the database every few seconds; logging each command would consume the
+        // Log Analytics daily cap. Uses the production configuration (appsettings.json), not test overrides.
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.json"))
+            .Build();
+        // Like the logging system: the longest configured prefix of the category wins.
+        var segments = category.Split('.');
+        var level = Enumerable.Range(1, segments.Length).Reverse()
+            .Select(n => configuration[$"Logging:LogLevel:{string.Join('.', segments.Take(n))}"])
+            .FirstOrDefault(value => value is not null) ?? configuration["Logging:LogLevel:Default"];
+
+        level.ShouldBe("Warning", $"'{category}' must log at Warning or above in production");
     }
 
     [Fact]
