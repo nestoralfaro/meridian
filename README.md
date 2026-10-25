@@ -95,6 +95,13 @@ Endpoints: `/health/live` (process up), `/health/ready` (database reachable **an
 - **Append-only audit trail.** The app role can't `UPDATE`, `DELETE` or `TRUNCATE` `"AuditEvents"`, enforced by the database and covered by tests.
 - Migrations must be **backward compatible** (expand/contract): the previous revision keeps serving while they run.
 
+### Observability
+
+- **OpenTelemetry** traces, metrics and logs (ASP.NET Core, HttpClient, Npgsql), exported to **Application Insights** via the Azure Monitor distro when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set (Bicep injects it).
+- **Every response carries its trace id** (`X-Trace-Id`, and `traceId` in every RFC 9457 ProblemDetails body), so a support ticket leads straight to the request, its database calls and any exception: [runbook](docs/runbooks/trace-a-request.md).
+- Unhandled exceptions return a 500 ProblemDetails with no internals; details stay in telemetry.
+- Cost guardrails: health probes aren't traced, Npgsql logs warnings only, and nothing logs credentials or bodies (tested).
+
 ### Container image
 
 Multi-stage [`Dockerfile`](Dockerfile): Node builds the SPA → .NET SDK publishes the API → **chiseled** ASP.NET runtime (no shell or package manager, non-root user `app`, port 8080). About 134 MB uncompressed and 52 MB to pull; the app itself adds about 2 MB to Microsoft's base image.

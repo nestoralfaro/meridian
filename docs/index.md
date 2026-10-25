@@ -20,6 +20,7 @@ Source code: [github.com/nestoralfaro/meridian](https://github.com/nestoralfaro/
 ## Runbooks
 
 - [Deploy, promote and roll back](runbooks/deploy-and-rollback.html)
+- [Trace a client's request end to end](runbooks/trace-a-request.html)
 
 ## Coming soon
 
