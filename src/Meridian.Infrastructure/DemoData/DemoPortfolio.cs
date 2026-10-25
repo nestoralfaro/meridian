@@ -18,6 +18,12 @@ internal static class DemoPortfolio
     public const string DanaEmail = "dana@meridian.test";
     public const string RajEmail = "raj@meridian.test";
     public const int HistoryDays = 90;
+
+    /// <summary>
+    /// Bump when the generated data changes shape (new personas, users, fields). Deployments holding an older version
+    /// reset immediately instead of waiting for the daily reset. History: 1 = portfolio (#24); 2 = + demo users (#16).
+    /// </summary>
+    public const int Version = 2;
     private const int Seed = 20261024;
 
     public static readonly string[] FictionalSymbols = ["MDTOT", "MDINT", "MDBND", "MDMMF", "ACME", "GLBX"];
