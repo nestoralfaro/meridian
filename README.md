@@ -112,7 +112,15 @@ Multi-stage [`Dockerfile`](Dockerfile): Node builds the SPA → .NET SDK publish
 - [ADR-0002](docs/adr/0002-hosting-azure-container-apps.md): Host on Azure Container Apps
 - [ADR-0003](docs/adr/0003-oidc-deploy-identity.md): Deploy with OIDC workload identity federation
 - [ADR-0004](docs/adr/0004-single-origin-hosting.md): Serve the SPA and the API from a single origin
+- [ADR-0005](docs/adr/0005-postgresql-on-neon.md): PostgreSQL on Neon, through EF Core
+- [ADR-0006](docs/adr/0006-solution-structure.md): Layered solution structure, enforced by tests
 - [ADR-0008](docs/adr/0008-immutable-revision-deployments.md): Deploy every change as an immutable, verified revision
+
+## How we work
+
+- [Definition of Ready](docs/agile/definition-of-ready.md) · [Definition of Done](docs/agile/definition-of-done.md)
+- [Project board](https://github.com/users/nestoralfaro/projects/3) (two-week sprints, story points)
+- Sprint reviews and retrospectives: [Sprint 0](docs/agile/sprint-0-review.md)
 
 ## License
 
