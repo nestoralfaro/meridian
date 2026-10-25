@@ -14,5 +14,7 @@
   <ItemGroup>
     <!-- Stand-in for the Angular build output so SPA hosting can be tested without Node. -->
     <None Include="SpaFixture\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The documented least-privilege grants, executed verbatim against the test database. -->
+    <None Include="..\..\db\app-role-grants.sql" Link="Database\app-role-grants.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

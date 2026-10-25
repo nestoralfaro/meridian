@@ -502,3 +502,7 @@ playwright-report/
 
 # --- Reqnroll: feature code-behind is generated at build time ---
 *.feature.cs
+
+# --- EF Core migration bundles (built in CD) ---
+efbundle
+migrations.log

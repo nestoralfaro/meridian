@@ -34,6 +34,7 @@ src/
 tests/
   Meridian.ArchitectureTests/     layering rules enforced in CI (ArchUnitNET)
   Meridian.Api.IntegrationTests/  host tests + Reqnroll acceptance specs, real PostgreSQL via Testcontainers
+db/          least-privilege grants for the application role (executed by tests)
 .github/     workflows, issue/PR templates, CODEOWNERS, Dependabot
 infra/       Bicep: Log Analytics, Application Insights, Container Apps, budget
 docs/adr/    Architecture Decision Records
@@ -71,17 +72,28 @@ SOURCE_REVISION=$(git rev-parse HEAD) docker compose up --build   # http://local
 docker compose down -v                                             # stop and delete the local database
 ```
 
-**Day-to-day development** (hot reload). Start only the database, then the API and the Angular dev server, which proxies `/api` and `/health` to the API:
+**Day-to-day development** (hot reload). Start the database and apply migrations, then run the API and the Angular dev server, which proxies `/api` and `/health` to the API:
 
 ```bash
-docker compose up -d db
+docker compose up -d db migrations
 dotnet run --project src/Meridian.Api          # http://localhost:5090
 (cd src/meridian-web && npm start)            # http://localhost:4200
 ```
 
 To serve a real Angular build from the API without Docker: `(cd src/meridian-web && npm run build)`, then `dotnet run --project src/Meridian.Api --launch-profile single-origin`.
 
-Endpoints: `/health/live` (process up), `/health/ready` (database reachable), `/api/v1/version` (build and commit).
+Endpoints: `/health/live` (process up), `/health/ready` (database reachable **and** schema up to date), `/api/v1/version` (build and commit).
+
+### Database and migrations
+
+- **EF Core 10 + Npgsql**; migrations live in `src/Meridian.Infrastructure/Persistence/Migrations`.
+  ```bash
+  dotnet tool restore
+  dotnet ef migrations add <Name> --project src/Meridian.Infrastructure --startup-project src/Meridian.Infrastructure --output-dir Persistence/Migrations
+  ```
+- **Two roles, least privilege.** CD applies migrations with a self-contained migration bundle as the database **owner** (direct connection) *before* the new revision exists. The running app connects as **`meridian_app`**, which can read and write rows but can't change the schema. Grants: [`db/app-role-grants.sql`](db/app-role-grants.sql), the same file the integration tests execute.
+- **Append-only audit trail.** The app role can't `UPDATE`, `DELETE` or `TRUNCATE` `"AuditEvents"`, enforced by the database and covered by tests.
+- Migrations must be **backward compatible** (expand/contract): the previous revision keeps serving while they run.
 
 ### Container image
 

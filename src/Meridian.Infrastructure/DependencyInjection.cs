@@ -1,4 +1,5 @@
 using Meridian.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -37,8 +38,12 @@ public static class DependencyInjection
             dataSource.ConnectionStringBuilder.GssEncryptionMode = GssEncryptionMode.Disable;
         });
 
+        services.AddDbContext<MeridianDbContext>((provider, options) =>
+            options.UseNpgsql(provider.GetRequiredService<NpgsqlDataSource>()));
+
         services.AddHealthChecks()
-            .AddCheck<DatabaseHealthCheck>("database", tags: [ReadinessTag]);
+            .AddCheck<DatabaseHealthCheck>("database", tags: [ReadinessTag])
+            .AddCheck<SchemaHealthCheck>("schema", tags: [ReadinessTag]);
 
         return services;
     }
