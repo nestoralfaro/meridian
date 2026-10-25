@@ -22,6 +22,14 @@
         }
       </ul>
     </nav>
+
+    <div class="session">
+      @if (auth.user(); as user) {
+        <span class="session__user">Signed in as {{ user.displayName }}</span>
+      } @else if (auth.status() === 'signed-out') {
+        <a routerLink="/sign-in">Sign in</a>
+      }
+    </div>
   </div>
 </header>
 

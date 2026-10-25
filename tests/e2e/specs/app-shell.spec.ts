@@ -1,8 +1,15 @@
-import { expect, expectNoSeriousA11yViolations, test } from './fixtures';
+import {
+  expect,
+  expectNoSeriousA11yViolations,
+  signInAs,
+  test,
+} from './fixtures';
 
 // Acceptance criteria from issue #23.
 test.describe('app shell', () => {
-  test('mobile: primary navigation is a bottom bar and nothing scrolls horizontally', async ({ page }) => {
+  test('mobile: primary navigation is a bottom bar and nothing scrolls horizontally', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
 
@@ -24,8 +31,14 @@ test.describe('app shell', () => {
     expect(box!.y).toBeLessThan(120);
   });
 
-  test('keyboard: the first Tab reaches "Skip to main content", which moves focus to the main region', async ({ page, browserName }) => {
-    test.skip(browserName === 'webkit', 'Desktop Safari does not Tab to links by default (system setting)');
+  test('keyboard: the first Tab reaches "Skip to main content", which moves focus to the main region', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName === 'webkit',
+      'Desktop Safari does not Tab to links by default (system setting)',
+    );
     await page.goto('/');
 
     await page.keyboard.press('Tab');
@@ -37,18 +50,35 @@ test.describe('app shell', () => {
     await expect(page.locator('#main-content')).toBeFocused();
   });
 
-  test('navigation moves focus to the new page heading and updates the title', async ({ page }) => {
+  test('navigation moves focus to the new page heading and updates the title', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/');
+    await signInAs(page, 'Dana');
+    await page
+      .getByRole('navigation', { name: 'Primary' })
+      .getByRole('link', { name: 'Home' })
+      .click();
 
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Dashboard' }).click();
+    await page
+      .getByRole('navigation', { name: 'Primary' })
+      .getByRole('link', { name: 'Dashboard' })
+      .click();
 
     await expect(page).toHaveTitle('Dashboard | Meridian');
-    await expect(page.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeFocused();
-    await expect(page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Dashboard' }),
+    ).toBeFocused();
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Primary' })
+        .getByRole('link', { name: 'Dashboard' }),
+    ).toHaveAttribute('aria-current', 'page');
   });
 
-  test('dark theme meets the same accessibility bar on every page', async ({ page }) => {
+  test('dark theme meets the same accessibility bar on every page', async ({
+    page,
+  }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
     for (const path of ['/', '/dashboard', '/no-such-page']) {
       await page.goto(path);
@@ -57,17 +87,26 @@ test.describe('app shell', () => {
     }
   });
 
-  test('200% zoom: content stays available without horizontal scrolling', async ({ page }) => {
+  test('200% zoom: content stays available without horizontal scrolling', async ({
+    page,
+  }) => {
     // A 1280px-wide window at 200% zoom lays out like a 640px viewport.
     await page.setViewportSize({ width: 640, height: 400 });
     for (const path of ['/', '/dashboard', '/no-such-page']) {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      expect(await hasHorizontalScroll(page), `horizontal scroll on ${path}`).toBe(false);
+      expect(
+        await hasHorizontalScroll(page),
+        `horizontal scroll on ${path}`,
+      ).toBe(false);
     }
   });
 });
 
-async function hasHorizontalScroll(page: import('@playwright/test').Page): Promise<boolean> {
-  return page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+async function hasHorizontalScroll(
+  page: import('@playwright/test').Page,
+): Promise<boolean> {
+  return page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth,
+  );
 }
