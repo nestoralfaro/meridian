@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AccountsService } from '../../core/accounts/accounts.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { AllocationChart } from '../../shared/ui/allocation-chart';
 import {
   describeChange,
   formatChange,
@@ -10,6 +11,7 @@ import {
 
 @Component({
   selector: 'mer-dashboard-page',
+  imports: [AllocationChart],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

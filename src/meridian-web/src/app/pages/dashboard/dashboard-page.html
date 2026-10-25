@@ -44,6 +44,8 @@
         </p>
       </section>
 
+      <mer-allocation-chart [slices]="overview.allocation" />
+
       <h2>Your accounts</h2>
       <ul class="accounts">
         @for (account of overview.accounts; track account.id) {

@@ -12,6 +12,7 @@ describe('AccountsService', () => {
     totalValue: { amount: 0, currency: 'USD' },
     dayChange: { amount: 0, currency: 'USD' },
     dayChangePercent: 0,
+    allocation: [],
   };
   let http: HttpTestingController;
   let accounts: AccountsService;

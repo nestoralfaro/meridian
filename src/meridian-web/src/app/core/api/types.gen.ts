@@ -21,6 +21,7 @@ export type AccountsOverviewResponse = {
   totalValue: MoneyResponse;
   dayChange: MoneyResponse;
   dayChangePercent: number;
+  allocation: Array<AllocationSliceResponse>;
 };
 
 export type AccountSummaryResponse = {
@@ -32,6 +33,12 @@ export type AccountSummaryResponse = {
   cash: MoneyResponse;
   dayChange: MoneyResponse;
   dayChangePercent: number;
+};
+
+export type AllocationSliceResponse = {
+  assetClass: string;
+  value: MoneyResponse;
+  percent: number;
 };
 
 export type ChangePasswordRequest = {

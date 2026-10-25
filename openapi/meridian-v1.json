@@ -421,7 +421,8 @@
           "accounts",
           "totalValue",
           "dayChange",
-          "dayChangePercent"
+          "dayChangePercent",
+          "allocation"
         ],
         "type": "object",
         "properties": {
@@ -440,6 +441,12 @@
           "dayChangePercent": {
             "type": "number",
             "format": "double"
+          },
+          "allocation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AllocationSliceResponse"
+            }
           }
         }
       },
@@ -479,6 +486,26 @@
             "$ref": "#/components/schemas/MoneyResponse"
           },
           "dayChangePercent": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "AllocationSliceResponse": {
+        "required": [
+          "assetClass",
+          "value",
+          "percent"
+        ],
+        "type": "object",
+        "properties": {
+          "assetClass": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "percent": {
             "type": "number",
             "format": "double"
           }

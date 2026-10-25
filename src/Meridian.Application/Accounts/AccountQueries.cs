@@ -14,7 +14,44 @@ public sealed class AccountQueries(IAccountRepository accounts)
 
         var total = summaries.Select(a => a.TotalValue).Sum(ReportingCurrency);
         var dayChange = summaries.Select(a => a.DayChange).Sum(ReportingCurrency);
-        return new AccountsOverview(summaries, total, dayChange, PercentOf(dayChange, total));
+        return new AccountsOverview(summaries, total, dayChange, PercentOf(dayChange, total), Allocate(owned, total));
+    }
+
+    /// <summary>Value by asset class (uninvested cash counts as Cash), largest first.</summary>
+    private static List<AllocationSlice> Allocate(IReadOnlyList<Account> owned, Money total)
+    {
+        if (total.Amount == 0m)
+        {
+            return [];
+        }
+
+        var byClass = owned
+            .SelectMany(a => a.Positions.Select(p => (AssetClass: p.Security.AssetClass, Value: p.MarketValue)).Append((AssetClass: AssetClass.Cash, Value: a.Cash)))
+            .GroupBy(x => x.AssetClass)
+            .Select(g => (AssetClass: g.Key, Value: g.Select(x => x.Value).Sum(ReportingCurrency)))
+            .Where(x => x.Value.Amount != 0m)
+            .OrderByDescending(x => x.Value.Amount)
+            .ToList();
+
+        var percents = LargestRemainderPercents([.. byClass.Select(x => x.Value.Amount)], total.Amount);
+        return [.. byClass.Select((x, i) => new AllocationSlice(x.AssetClass, x.Value, percents[i]))];
+    }
+
+    /// <summary>
+    /// Percentages to two decimals that add up to exactly 100: floor each share, then give the missing hundredths to the
+    /// shares with the largest remainders (Hamilton's method). Independent rounding can total 99.99 or 100.01.
+    /// </summary>
+    private static decimal[] LargestRemainderPercents(IReadOnlyList<decimal> values, decimal total)
+    {
+        var raw = values.Select(v => v / total * 10_000m).ToArray(); // in hundredths of a percent
+        var floors = raw.Select(Math.Floor).ToArray();
+        var missing = (int)(10_000m - floors.Sum());
+        foreach (var index in Enumerable.Range(0, raw.Length).OrderByDescending(i => raw[i] - floors[i]).Take(missing))
+        {
+            floors[index] += 1m;
+        }
+
+        return [.. floors.Select(f => f / 100m)];
     }
 
     public async Task<AccountLookup> GetAccountAsync(Guid clientId, Guid accountId, CancellationToken cancellationToken = default)

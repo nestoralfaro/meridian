@@ -32,6 +32,10 @@ const overview = {
   totalValue: usd(20781.75),
   dayChange: usd(63),
   dayChangePercent: 0.3,
+  allocation: [
+    { assetClass: 'Fund', value: usd(14718), percent: 70.82 },
+    { assetClass: 'Stock', value: usd(6063.75), percent: 29.18 },
+  ],
 };
 
 describe('DashboardPage', () => {
@@ -112,10 +116,24 @@ describe('DashboardPage', () => {
   it('welcomes clients who have no accounts yet', () => {
     state.set({
       status: 'loaded',
-      overview: { accounts: [], totalValue: usd(0), dayChange: usd(0), dayChangePercent: 0 },
+      overview: {
+        accounts: [],
+        totalValue: usd(0),
+        dayChange: usd(0),
+        dayChangePercent: 0,
+        allocation: [],
+      },
     });
     const page = render();
 
     expect(page.textContent).toContain("You don't have any accounts yet");
+  });
+
+  it('shows the asset allocation once accounts are loaded', () => {
+    state.set({ status: 'loaded', overview });
+    const page = render();
+
+    expect(page.querySelector('mer-allocation-chart')).not.toBeNull();
+    expect(page.querySelector('mer-allocation-chart tbody')?.textContent).toContain('Funds');
   });
 });
