@@ -1,3 +1,4 @@
+using Meridian.Application.Accounts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Meridian.Application;
@@ -8,6 +9,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+        services.AddScoped<AccountQueries>();
         return services;
     }
 }

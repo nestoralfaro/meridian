@@ -1,3 +1,4 @@
+using Meridian.Application.Accounts;
 using Meridian.Application.Auditing;
 using Meridian.Application.DemoData;
 using Meridian.Application.Identity;
@@ -69,6 +70,7 @@ public static class DependencyInjection
             .AddPasswordValidator<CommonPasswordValidator>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IAuditTrail, AuditTrail>();
+        services.AddScoped<IAccountRepository, AccountRepository>();
 
         // Keys that sign session cookies and antiforgery tokens, shared by every replica.
         services.AddDataProtection()

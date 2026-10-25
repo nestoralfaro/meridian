@@ -4,6 +4,36 @@ export type ClientOptions = {
   baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type AccountDetailResponse = {
+  id: string;
+  name: string;
+  type: string;
+  maskedNumber: string;
+  totalValue: MoneyResponse;
+  cash: MoneyResponse;
+  dayChange: MoneyResponse;
+  dayChangePercent: number | string;
+  holdings: Array<HoldingResponse>;
+};
+
+export type AccountsOverviewResponse = {
+  accounts: Array<AccountSummaryResponse>;
+  totalValue: MoneyResponse;
+  dayChange: MoneyResponse;
+  dayChangePercent: number | string;
+};
+
+export type AccountSummaryResponse = {
+  id: string;
+  name: string;
+  type: string;
+  maskedNumber: string;
+  totalValue: MoneyResponse;
+  cash: MoneyResponse;
+  dayChange: MoneyResponse;
+  dayChangePercent: number | string;
+};
+
 export type ChangePasswordRequest = {
   currentPassword: string;
   newPassword: string;
@@ -11,6 +41,16 @@ export type ChangePasswordRequest = {
 
 export type DemoSignInRequest = {
   persona: string;
+};
+
+export type HoldingResponse = {
+  symbol: string;
+  name: string;
+  assetClass: string;
+  quantity: number | string;
+  price: MoneyResponse;
+  marketValue: MoneyResponse;
+  dayChange: MoneyResponse;
 };
 
 export type HttpValidationProblemDetails = {
@@ -28,6 +68,11 @@ export type MeResponse = {
   displayName: string;
   email: string;
   isDemo: boolean;
+};
+
+export type MoneyResponse = {
+  amount: number | string;
+  currency: string;
 };
 
 export type ProblemDetails = {
@@ -251,3 +296,60 @@ export type ChangePasswordResponses = {
 };
 
 export type ChangePasswordResponse = ChangePasswordResponses[keyof ChangePasswordResponses];
+
+export type GetAccountsOverviewData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/accounts';
+};
+
+export type GetAccountsOverviewErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type GetAccountsOverviewError = GetAccountsOverviewErrors[keyof GetAccountsOverviewErrors];
+
+export type GetAccountsOverviewResponses = {
+  /**
+   * OK
+   */
+  200: AccountsOverviewResponse;
+};
+
+export type GetAccountsOverviewResponse =
+  GetAccountsOverviewResponses[keyof GetAccountsOverviewResponses];
+
+export type GetAccountData = {
+  body?: never;
+  path: {
+    accountId: string;
+  };
+  query?: never;
+  url: '/api/v1/accounts/{accountId}';
+};
+
+export type GetAccountErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+  /**
+   * Not Found
+   */
+  404: ProblemDetails;
+};
+
+export type GetAccountError = GetAccountErrors[keyof GetAccountErrors];
+
+export type GetAccountResponses = {
+  /**
+   * OK
+   */
+  200: AccountDetailResponse;
+};
+
+export type GetAccountResponse = GetAccountResponses[keyof GetAccountResponses];

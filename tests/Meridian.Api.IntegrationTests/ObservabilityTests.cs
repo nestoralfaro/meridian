@@ -88,7 +88,7 @@ public sealed partial class ObservabilityTests
         using var live = await client.GetAsync(new Uri("/health/live", UriKind.Relative), TestContext.Current.CancellationToken);
         using var ready = await client.GetAsync(new Uri("/health/ready", UriKind.Relative), TestContext.Current.CancellationToken);
         string[] probeTraces = [TraceIdOf(live), TraceIdOf(ready)];
-        await SettleAsync(factory, () => false); // nothing should arrive; wait the full settle window
+        await SettleAsync(factory, () => false, maxMilliseconds: 2000); // nothing should arrive; wait the settle window
 
         // Neither the probe requests nor the database queries the readiness check runs are exported.
         spans.Where(s => probeTraces.Contains(s.TraceId.ToHexString())).ShouldBeEmpty();
@@ -170,12 +170,13 @@ public sealed partial class ObservabilityTests
 
     /// <summary>
     /// The server span ends after the response is returned to the client, so exported spans arrive slightly later.
-    /// Waits (up to 2 s) until <paramref name="done"/> is true.
+    /// Waits (up to 10 s, returning as soon as <paramref name="done"/> is true; the full suite runs many hosts in
+    /// parallel, so export can lag) until <paramref name="done"/> is true.
     /// </summary>
-    private static async Task SettleAsync(MeridianApiFactory factory, Func<bool> done)
+    private static async Task SettleAsync(MeridianApiFactory factory, Func<bool> done, int maxMilliseconds = 10_000)
     {
         var tracer = factory.Services.GetRequiredService<TracerProvider>();
-        for (var elapsed = 0; elapsed < 2000 && !done(); elapsed += 50)
+        for (var elapsed = 0; elapsed < maxMilliseconds && !done(); elapsed += 50)
         {
             tracer.ForceFlush();
             await Task.Delay(50, TestContext.Current.CancellationToken);

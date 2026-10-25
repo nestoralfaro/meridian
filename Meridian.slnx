@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Meridian.Api.IntegrationTests/Meridian.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Meridian.Application.Tests/Meridian.Application.Tests.csproj" />
     <Project Path="tests/Meridian.ArchitectureTests/Meridian.ArchitectureTests.csproj" />
     <Project Path="tests/Meridian.Domain.Tests/Meridian.Domain.Tests.csproj" />
   </Folder>
