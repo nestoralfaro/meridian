@@ -42,6 +42,9 @@ test.describe('walking skeleton', () => {
   }) => {
     await signInAs(page, 'Dana');
     await page.getByRole('link', { name: 'Home' }).first().click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Welcome to Meridian' }),
+    ).toBeVisible();
     await page.getByRole('link', { name: 'Go to your dashboard' }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
