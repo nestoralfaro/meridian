@@ -15,6 +15,10 @@ az containerapp revision list -g rg-meridian -n $APP \
   --query "[].{name:name, active:properties.active, traffic:properties.trafficWeight, created:properties.createdTime}" -o table
 ```
 
+## Redeploy a known build
+
+Actions → `deploy` → *Run workflow* → choose the environment and enter a commit SHA whose image exists in GHCR. It goes through the same smoke test, promotion and (for production) approval as a normal deployment.
+
 ## Roll back (seconds, no rebuild)
 
 The previous revision stays active after every deployment. Send traffic back to it:
