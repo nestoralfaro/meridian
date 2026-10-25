@@ -7,6 +7,9 @@ using Meridian.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddObservability();
+// Numbers are numbers: no lenient string parsing, so the contract states exact types (amounts are JSON numbers).
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.Strict);
 builder.Services.AddApiDocumentation();
 builder.Services.AddMeridianAuth(secureCookies: builder.Configuration.GetValue("Auth:SecureCookies", defaultValue: true));
 builder.Services.AddSignInRateLimiting(permitsPerMinute: builder.Configuration.GetValue("Auth:SignInAttemptsPerMinute", defaultValue: 10));

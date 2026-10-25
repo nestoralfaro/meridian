@@ -1,0 +1,116 @@
+.greeting {
+  margin-block-start: 0;
+  color: var(--color-text-muted);
+}
+
+.overview {
+  margin-block: var(--space-4) var(--space-6);
+}
+
+.overview__label {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.overview__total {
+  margin: var(--space-1) 0;
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.change {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.change--up {
+  color: var(--color-gain);
+}
+
+.change--down {
+  color: var(--color-loss);
+}
+
+.accounts {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-1) var(--space-4);
+  align-items: baseline;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+
+  .change {
+    grid-column: 2;
+    justify-self: end;
+    font-size: var(--font-size-sm);
+  }
+}
+
+.account__identity {
+  display: grid;
+}
+
+.account__name {
+  font-weight: 600;
+}
+
+.account__number,
+.problem__reference {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.account__value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.skeleton {
+  border-radius: var(--radius);
+  background: var(--color-hover);
+}
+
+.skeleton--total {
+  inline-size: 12rem;
+  block-size: 2.5rem;
+  margin-block-end: var(--space-4);
+}
+
+.skeleton--row {
+  block-size: 4rem;
+  margin-block-end: var(--space-3);
+}
+
+.problem {
+  padding: var(--space-4);
+  border: 2px solid var(--color-danger);
+  border-radius: var(--radius);
+}
+
+.problem__title {
+  margin-block-start: 0;
+  font-weight: 700;
+}
+
+.button-secondary {
+  min-block-size: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
