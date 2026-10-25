@@ -38,3 +38,4 @@ API reference, Storybook component library, test & coverage reports, accessibili
 
 - [Definition of Ready](agile/definition-of-ready.html) · [Definition of Done](agile/definition-of-done.html)
 - [Sprint 0 review and retrospective](agile/sprint-0-review.html)
+- [Sprint 1 review and retrospective](agile/sprint-1-review.html)
