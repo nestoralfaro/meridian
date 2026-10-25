@@ -53,6 +53,27 @@ public sealed class DemoDataSeederTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task DataSeededByAnOlderVersionIsUpgradedImmediately()
+    {
+        // e.g. the release that introduced demo users: existing demo data had clients but no users, and the daily
+        // reset wasn't due yet, so "Sign in as Dana" failed until the next day.
+        await UseDemoDataAsync(demo => demo.EnsureSeededAsync(TestContext.Current.CancellationToken));
+        await UseDbAsync(async db =>
+        {
+            await db.Users.ExecuteDeleteAsync(TestContext.Current.CancellationToken);
+            await db.DemoDataState.ExecuteUpdateAsync(s => s.SetProperty(x => x.DatasetVersion, DemoPortfolio.Version - 1), TestContext.Current.CancellationToken);
+        });
+
+        await UseDemoDataAsync(demo => demo.EnsureSeededAsync(TestContext.Current.CancellationToken));
+
+        await UseDbAsync(async db =>
+        {
+            (await db.Users.CountAsync(u => u.IsDemo, TestContext.Current.CancellationToken)).ShouldBe(2);
+            (await db.DemoDataState.SingleAsync(TestContext.Current.CancellationToken)).DatasetVersion.ShouldBe(DemoPortfolio.Version);
+        });
+    }
+
+    [Fact]
     public async Task ResetRestoresThePortfolioAndLeavesTheAuditTrailAlone()
     {
         await UseDemoDataAsync(demo => demo.EnsureSeededAsync(TestContext.Current.CancellationToken));

@@ -96,6 +96,9 @@ internal sealed class DemoDataState
 {
     public int Id { get; set; } = 1;
     public DateTimeOffset LastResetAt { get; set; }
+
+    /// <summary>The <see cref="DemoData.DemoPortfolio.Version"/> that produced the current data.</summary>
+    public int DatasetVersion { get; set; }
 }
 
 internal sealed class DemoDataStateConfiguration : IEntityTypeConfiguration<DemoDataState>

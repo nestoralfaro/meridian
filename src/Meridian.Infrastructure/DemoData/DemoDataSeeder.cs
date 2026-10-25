@@ -15,13 +15,21 @@ internal sealed class DemoDataSeeder(MeridianDbContext db, TimeProvider clock) :
     /// <summary>Arbitrary, stable key that identifies the demo-data lock.</summary>
     private const long AdvisoryLockKey = 0x4D45_5249_4449_414E; // "MERIDIAN"
 
+    /// <summary>Seeds when there's no demo data, and upgrades data written by an older <see cref="DemoPortfolio.Version"/>.</summary>
     public Task EnsureSeededAsync(CancellationToken cancellationToken = default) =>
         InLockedTransactionAsync(async () =>
         {
             var demoClientIds = Generate().Clients.Select(c => c.Id).ToList();
-            if (!await db.Clients.AnyAsync(c => demoClientIds.Contains(c.Id), cancellationToken).ConfigureAwait(false))
+            var seeded = await db.Clients.AnyAsync(c => demoClientIds.Contains(c.Id), cancellationToken).ConfigureAwait(false);
+            var version = (await db.DemoDataState.AsNoTracking().SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false))?.DatasetVersion;
+
+            if (!seeded)
             {
                 await InsertPortfolioAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else if (version != DemoPortfolio.Version)
+            {
+                await ReplaceDemoDataAsync(cancellationToken).ConfigureAwait(false);
             }
         }, cancellationToken);
 
@@ -30,20 +38,22 @@ internal sealed class DemoDataSeeder(MeridianDbContext db, TimeProvider clock) :
     /// (the app role couldn't delete audit events anyway).
     /// </summary>
     public Task ResetAsync(CancellationToken cancellationToken = default) =>
-        InLockedTransactionAsync(async () =>
-        {
-            var demoClientIds = Generate().Clients.Select(c => c.Id).ToList();
-            var demoAccounts = db.Accounts.Where(a => demoClientIds.Contains(a.ClientId)).Select(a => a.Id);
+        InLockedTransactionAsync(() => ReplaceDemoDataAsync(cancellationToken), cancellationToken);
 
-            // Children first.
-            await db.Transactions.Where(t => demoAccounts.Contains(t.AccountId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-            await db.Positions.Where(p => demoAccounts.Contains(p.AccountId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-            await db.Accounts.Where(a => demoClientIds.Contains(a.ClientId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-            await db.Users.Where(u => u.IsDemo).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-            await db.Clients.Where(c => demoClientIds.Contains(c.Id)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-            await db.Securities.Where(s => !db.Positions.Any(p => p.SecuritySymbol == s.Symbol)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
-            await InsertPortfolioAsync(cancellationToken).ConfigureAwait(false);
-        }, cancellationToken);
+    private async Task ReplaceDemoDataAsync(CancellationToken cancellationToken)
+    {
+        var demoClientIds = Generate().Clients.Select(c => c.Id).ToList();
+        var demoAccounts = db.Accounts.Where(a => demoClientIds.Contains(a.ClientId)).Select(a => a.Id);
+
+        // Children first.
+        await db.Transactions.Where(t => demoAccounts.Contains(t.AccountId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        await db.Positions.Where(p => demoAccounts.Contains(p.AccountId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        await db.Accounts.Where(a => demoClientIds.Contains(a.ClientId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        await db.Users.Where(u => u.IsDemo).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        await db.Clients.Where(c => demoClientIds.Contains(c.Id)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        await db.Securities.Where(s => !db.Positions.Any(p => p.SecuritySymbol == s.Symbol)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        await InsertPortfolioAsync(cancellationToken).ConfigureAwait(false);
+    }
 
     public async Task<DateTimeOffset?> LastResetAtAsync(CancellationToken cancellationToken = default) =>
         (await db.DemoDataState.AsNoTracking().SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false))?.LastResetAt;
@@ -69,11 +79,12 @@ internal sealed class DemoDataSeeder(MeridianDbContext db, TimeProvider clock) :
         var state = await db.DemoDataState.SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         if (state is null)
         {
-            db.DemoDataState.Add(new DemoDataState { LastResetAt = now });
+            db.DemoDataState.Add(new DemoDataState { LastResetAt = now, DatasetVersion = DemoPortfolio.Version });
         }
         else
         {
             state.LastResetAt = now;
+            state.DatasetVersion = DemoPortfolio.Version;
         }
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

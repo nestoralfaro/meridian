@@ -371,6 +371,9 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<int>("DatasetVersion")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("LastResetAt")
                         .HasColumnType("timestamp with time zone");
 
