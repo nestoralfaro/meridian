@@ -144,7 +144,8 @@ internal static class AccountEndpoints
         TypedResults.Problem(statusCode: StatusCodes.Status404NotFound, title: "Account not found.");
 
     private static AccountSummaryResponse ToResponse(AccountSummary a) =>
-        new(a.Id, a.Name, a.Type.ToString(), a.MaskedNumber, MoneyResponse.From(a.TotalValue), MoneyResponse.From(a.Cash), MoneyResponse.From(a.DayChange), a.DayChangePercent);
+        new(a.Id, a.Name, a.Type.ToString(), a.MaskedNumber, MoneyResponse.From(a.TotalValue), MoneyResponse.From(a.Cash), MoneyResponse.From(a.DayChange), a.DayChangePercent,
+            a.Version);
 }
 
 /// <summary>Exact decimal amount plus ISO 4217 currency. The SPA formats it; it never does arithmetic on it.</summary>
@@ -153,8 +154,10 @@ internal sealed record MoneyResponse(decimal Amount, string Currency)
     public static MoneyResponse From(Money money) => new(money.Amount, money.Currency);
 }
 
+/// <param name="Version">Changes whenever the account changes. Send it back with a transfer so a stale review is detected.</param>
 internal sealed record AccountSummaryResponse(
-    Guid Id, string Name, string Type, string MaskedNumber, MoneyResponse TotalValue, MoneyResponse Cash, MoneyResponse DayChange, decimal DayChangePercent);
+    Guid Id, string Name, string Type, string MaskedNumber, MoneyResponse TotalValue, MoneyResponse Cash, MoneyResponse DayChange, decimal DayChangePercent,
+    uint Version);
 
 /// <param name="Percent">Share of the total value; the slices' percentages add up to exactly 100.</param>
 internal sealed record AllocationSliceResponse(string AssetClass, MoneyResponse Value, decimal Percent);

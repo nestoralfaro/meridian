@@ -30,6 +30,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/account/account-page').then((m) => m.AccountPage),
   },
   {
+    path: 'transfer',
+    title: 'Move money | Meridian',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/transfer/transfer-page').then((m) => m.TransferPage),
+  },
+  {
     path: 'activity',
     title: 'Activity | Meridian',
     canActivate: [authGuard],

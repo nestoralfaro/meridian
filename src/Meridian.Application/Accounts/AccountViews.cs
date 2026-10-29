@@ -10,7 +10,8 @@ public sealed record AccountSummary(
     Money TotalValue,
     Money Cash,
     Money DayChange,
-    decimal DayChangePercent);
+    decimal DayChangePercent,
+    uint Version);
 
 /// <summary>One asset class's share of the client's total value. Percentages across slices add up to exactly 100.</summary>
 public sealed record AllocationSlice(AssetClass AssetClass, Money Value, decimal Percent);

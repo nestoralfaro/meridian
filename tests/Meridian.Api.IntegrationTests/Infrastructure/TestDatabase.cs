@@ -22,7 +22,11 @@ internal static class TestDatabase
     private const string MigratedDatabase = "meridiandb";
     private const string UnmigratedDatabase = "meridian_unmigrated";
 
-    private static readonly PostgreSqlContainer Container = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    // Each isolated database gets its own app host and connection pool, and pools keep idle connections for a while.
+    // With parallel test classes and concurrency scenarios the default of 100 connections runs out.
+    private static readonly PostgreSqlContainer Container = new PostgreSqlBuilder("postgres:17-alpine")
+        .WithCommand("-c", "max_connections=500")
+        .Build();
     private static readonly Lazy<Task> Ready = new(InitializeAsync);
 
     /// <summary>The migrated database, as the application role (what the running app uses).</summary>

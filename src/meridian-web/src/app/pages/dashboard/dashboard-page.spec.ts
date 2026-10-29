@@ -20,6 +20,7 @@ const overview = {
       cash: usd(1381.05),
       dayChange: usd(75.5),
       dayChangePercent: 0.61,
+      version: 1,
     },
     {
       id: 'a2',
@@ -30,6 +31,7 @@ const overview = {
       cash: usd(189.2),
       dayChange: usd(-12.5),
       dayChangePercent: -0.15,
+      version: 1,
     },
   ],
   totalValue: usd(20781.75),
