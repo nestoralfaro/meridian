@@ -42,6 +42,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/planner/planner-page').then((m) => m.PlannerPage),
   },
   {
+    path: 'learn',
+    title: 'Learn | Meridian',
+    loadComponent: () => import('./pages/learn/learn-page').then((m) => m.LearnPage),
+  },
+  {
+    path: 'learn/:slug',
+    title: 'Learn | Meridian',
+    loadComponent: () => import('./pages/learn/article-page').then((m) => m.ArticlePage),
+  },
+  {
     path: 'activity',
     title: 'Activity | Meridian',
     canActivate: [authGuard],

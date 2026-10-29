@@ -42,6 +42,7 @@ api.MapAccountEndpoints();
 api.MapActivityEndpoints();
 api.MapTransferEndpoints();
 api.MapPlannerEndpoints();
+api.MapLearnEndpoints();
 app.MapHub<QuotesHub>(QuotesHub.Path);
 app.MapSpaFallback();
 
