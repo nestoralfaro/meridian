@@ -31,6 +31,7 @@ COPY src/Meridian.Domain/ src/Meridian.Domain/
 COPY src/Meridian.Application/ src/Meridian.Application/
 COPY src/Meridian.Infrastructure/ src/Meridian.Infrastructure/
 COPY src/Meridian.Api/ src/Meridian.Api/
+COPY content/ content/
 # No .git in the build context, so Source Link can't read the commit; pass it explicitly instead.
 RUN dotnet publish src/Meridian.Api/Meridian.Api.csproj -c Release -a $TARGETARCH --no-restore -o /app \
       -p:SourceRevisionId=$SOURCE_REVISION -p:EnableSourceControlManagerQueries=false -p:UseAppHost=false
@@ -44,6 +45,7 @@ COPY .editorconfig dotnet-tools.json global.json Directory.Build.props Directory
 COPY src/Meridian.Domain/ src/Meridian.Domain/
 COPY src/Meridian.Application/ src/Meridian.Application/
 COPY src/Meridian.Infrastructure/ src/Meridian.Infrastructure/
+COPY content/ content/
 RUN RID="linux-$([ "$TARGETARCH" = "amd64" ] && echo x64 || echo "$TARGETARCH")" \
  && dotnet tool restore \
  && dotnet restore src/Meridian.Infrastructure/Meridian.Infrastructure.csproj -r "$RID" \

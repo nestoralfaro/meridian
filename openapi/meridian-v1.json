@@ -662,6 +662,68 @@
           }
         }
       }
+    },
+    "/api/v1/learn/articles": {
+      "get": {
+        "tags": [
+          "Learn"
+        ],
+        "summary": "Published Learn center articles, newest first.",
+        "operationId": "ListArticles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learn/articles/{slug}": {
+      "get": {
+        "tags": [
+          "Learn"
+        ],
+        "summary": "One published article, rendered to sanitized HTML. Drafts are not found.",
+        "operationId": "GetArticle",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -858,6 +920,64 @@
           "percent": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "ArticleListResponse": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArticleSummaryResponse"
+            }
+          }
+        }
+      },
+      "ArticleResponse": {
+        "required": [
+          "summary",
+          "html"
+        ],
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/ArticleSummaryResponse"
+          },
+          "html": {
+            "type": "string"
+          }
+        }
+      },
+      "ArticleSummaryResponse": {
+        "required": [
+          "slug",
+          "title",
+          "summary",
+          "published",
+          "readingMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "published": {
+            "type": "string",
+            "format": "date"
+          },
+          "readingMinutes": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1380,6 +1500,9 @@
     },
     {
       "name": "Auth"
+    },
+    {
+      "name": "Learn"
     }
   ]
 }

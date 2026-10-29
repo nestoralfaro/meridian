@@ -27,6 +27,7 @@ export class App {
     { label: 'Dashboard', path: '/dashboard', exact: false },
     { label: 'Move money', path: '/transfer', exact: false },
     { label: 'Planner', path: '/planner', exact: false },
+    { label: 'Learn', path: '/learn', exact: false },
   ];
 
   /** Build info is decorative: if the API is unavailable the footer simply omits it. */

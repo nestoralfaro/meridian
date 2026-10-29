@@ -5,6 +5,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="HtmlSanitizer" />
+    <PackageReference Include="Markdig" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
@@ -14,6 +16,11 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <!-- Design-time only (dotnet ef migrations); never flows into the API's runtime dependencies. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Learn center articles: Markdown reviewed in pull requests, embedded at build time (see MarkdownArticleStore). -->
+    <EmbeddedResource Include="..\..\content\learn\*.md" LogicalName="Meridian.Infrastructure.content.learn.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

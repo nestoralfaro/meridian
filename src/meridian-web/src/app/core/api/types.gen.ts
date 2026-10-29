@@ -55,6 +55,23 @@ export type AllocationSliceResponse = {
   percent: number;
 };
 
+export type ArticleListResponse = {
+  items: Array<ArticleSummaryResponse>;
+};
+
+export type ArticleResponse = {
+  summary: ArticleSummaryResponse;
+  html: string;
+};
+
+export type ArticleSummaryResponse = {
+  slug: string;
+  title: string;
+  summary: string;
+  published: string;
+  readingMinutes: number;
+};
+
 export type AssumptionsResponse = {
   stockMean: number;
   stockVolatility: number;
@@ -591,3 +608,46 @@ export type GetAccountPositionsResponses = {
 
 export type GetAccountPositionsResponse =
   GetAccountPositionsResponses[keyof GetAccountPositionsResponses];
+
+export type ListArticlesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/learn/articles';
+};
+
+export type ListArticlesResponses = {
+  /**
+   * OK
+   */
+  200: ArticleListResponse;
+};
+
+export type ListArticlesResponse = ListArticlesResponses[keyof ListArticlesResponses];
+
+export type GetArticleData = {
+  body?: never;
+  path: {
+    slug: string;
+  };
+  query?: never;
+  url: '/api/v1/learn/articles/{slug}';
+};
+
+export type GetArticleErrors = {
+  /**
+   * Not Found
+   */
+  404: ProblemDetails;
+};
+
+export type GetArticleError = GetArticleErrors[keyof GetArticleErrors];
+
+export type GetArticleResponses = {
+  /**
+   * OK
+   */
+  200: ArticleResponse;
+};
+
+export type GetArticleResponse = GetArticleResponses[keyof GetArticleResponses];
