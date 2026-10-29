@@ -179,6 +179,9 @@ jobs:
 
       - run: npm run typecheck
 
+      - name: Lint (web-first assertions, no fixed waits)
+        run: npm run lint -- --max-warnings 0
+
       - run: npx playwright install --with-deps chromium webkit
 
       - name: Playwright (Chromium, WebKit, mobile) with axe WCAG 2.2 AA checks on every page
