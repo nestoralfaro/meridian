@@ -59,13 +59,10 @@ public sealed class TransferCommands(ITransferStore store, TimeProvider clock)
             await store.SaveAsync(transfer, outgoing, incoming, new AuditRecord(actor, "TransferCompleted", $"transfer:{transfer.Id}"), cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (TransferConcurrencyException)
+        catch (Exception ex) when (ex is TransferConcurrencyException or DuplicateIdempotencyKeyException)
         {
-            return new TransferOutcome(TransferStatus.Conflict);
-        }
-        catch (DuplicateIdempotencyKeyException)
-        {
-            // A concurrent request with the same key won the race: answer as a retry of it.
+            // If a concurrent request with the same key won, this is a retry of it, whichever check (the account's
+            // version or the key's unique index) the database tripped first. Otherwise the account really changed.
             var winner = await store.FindByIdempotencyKeyAsync(request.ClientId, request.IdempotencyKey, cancellationToken).ConfigureAwait(false);
             return winner is null ? new TransferOutcome(TransferStatus.Conflict) : Replay(winner, request);
         }
