@@ -7,7 +7,26 @@
 
 A full-stack demo of a client-facing investing and planning portal: **Angular** SPA + **ASP.NET Core (.NET 10)** REST API, deployed to **Azure Container Apps** with infrastructure as code, CI/CD, and automated quality gates.
 
-> **🚧 Work in progress: Sprint 0 (infrastructure).** The application code has not been scaffolded yet. Follow along on the project board and in [`docs/adr`](docs/adr).
+**Try it:** [production](https://meridian-production.grayhill-d6e042ce.eastus2.azurecontainerapps.io) → **Sign in** → *Sign in as Dana* (a new investor) or *Sign in as Raj* (a pre-retiree). No account needed; demo data resets daily.
+
+| What you can do | Under the hood |
+|---|---|
+| **Dashboard**: total value, day change, allocation chart, recent activity | Exact `decimal` money; allocation percentages always total 100 (largest-remainder); every chart has a data table |
+| **Account pages**: holdings sorted, filtered and paged on the server | Allow-listed sort keys; another client's account looks exactly like a missing one, and the attempt is audited |
+| **Move money** between your own accounts, with review and confirm | Idempotency keys (retries never move money twice), optimistic concurrency on PostgreSQL `xmin`, one atomic transaction, DB check constraints, audit trail |
+| **Live prices** on account pages while you watch | SignalR over WebSockets; the server values every holding, so the browser never multiplies money; ticks are silent for screen readers |
+| **Retirement planner**: the chance your savings last to 95, with a fan chart | Seeded Monte Carlo built test-first and checked against an independent implementation |
+| **Learn**: short articles, no sign-in needed | Markdown reviewed through pull requests (a Git-based CMS), raw HTML disabled, then sanitized |
+| **Register**, sign in, idle timeout warning | Cookie session (no tokens in the browser), CSRF tokens, lockout, rate limiting, enumeration-safe errors |
+| **API reference** at [`/docs`](https://meridian-production.grayhill-d6e042ce.eastus2.azurecontainerapps.io/docs) | Committed OpenAPI contract → generated TypeScript types, with drift and breaking-change gates in CI |
+
+**Every change** passes the required checks before merge:
+- unit tests, plus Reqnroll acceptance scenarios against real PostgreSQL
+- Playwright in three browser profiles, with an axe WCAG 2.2 AA scan on every page
+- CodeQL and secret scanning
+- API contract checks
+
+It then deploys to staging as an immutable revision, and traffic moves only after smoke tests and the full browser suite pass against that revision. Production is promoted from the same image, with approval. How the work was planned and reviewed: [sprint reviews](#how-we-work), [ADRs](#architecture-decisions).
 
 > **Disclaimer:** Meridian is a fictional demo. All data is synthetic. It is not affiliated with, endorsed by, or representative of any financial institution, and nothing here is investment advice.
 
@@ -21,7 +40,7 @@ A full-stack demo of a client-facing investing and planning portal: **Angular** 
 
 > Both environments scale to zero when idle, so the first request after a quiet period can take a few seconds. Deployment and rollback: [runbook](docs/runbooks/deploy-and-rollback.md).
 
-## Repository layout (so far)
+## Repository layout
 
 ```
 src/
@@ -32,10 +51,12 @@ src/
   Meridian.Worker/          background jobs host; one-off commands (demo-data reset)
   meridian-web/             Angular SPA (zoneless, standalone, strict TypeScript)
 tests/
-  Meridian.Domain.Tests/          domain rules (Money, portfolio valuation), test-first
+  Meridian.Domain.Tests/          domain rules (Money, valuation, transfers, the planner model), test-first
+  Meridian.Application.Tests/     use cases (queries, transfers) against in-memory ports
   Meridian.ArchitectureTests/     layering rules enforced in CI (ArchUnitNET)
   e2e/                            Playwright + axe against the running stack
   Meridian.Api.IntegrationTests/  host tests + Reqnroll acceptance specs, real PostgreSQL via Testcontainers
+content/     Learn center articles (Markdown with front matter, embedded at build time)
 db/          least-privilege grants for the application role (executed by tests)
 openapi/     the committed API contract (OpenAPI 3.1)
 .github/     workflows, issue/PR templates, CODEOWNERS, Dependabot
@@ -97,6 +118,19 @@ Endpoints: `/health/live` (process up), `/health/ready` (database reachable **an
 - **Idle timeout**: after 13 minutes without input, a modal warning (native `<dialog>`, focus on "Stay signed in"); at 15 minutes the client is signed out and told why. This matches the server's 15-minute sliding session. Background requests don't count as activity.
 - **Data Protection keys** (which sign cookies and tokens) live in PostgreSQL, so sessions survive restarts and work across replicas.
 - Identity stays inside Infrastructure behind an Application port; the API only turns a verified user into claims and a cookie.
+
+### Money movement and live prices
+
+- **Transfers** (`POST /api/v1/transfers`):
+  - **Idempotency:** an `Idempotency-Key` header is required. A retry returns the original transfer (`Idempotent-Replayed: true`); reusing a key for a different transfer is a 422.
+  - **Optimistic concurrency** on PostgreSQL's `xmin`: a stale review is a 409, and concurrent transfers can't lose updates.
+  - **One transaction** covers both balances, both activity rows, the transfer and its audit event; check constraints back it up.
+  - **Tested under real concurrency:** parallel retries with one key, and parallel transfers that would overdraw.
+- **Live prices** (`/hubs/quotes`, SignalR):
+  - Prices are a **simulated**, bounded random walk from the last close. Stored balances stay valued at the close; live figures are display-only.
+  - The server values each holding with the same domain rules as stored balances, and pushes per-viewer results only to clients watching their **own** account.
+  - The feed does no work when nobody is watching.
+  - Prices and subscriptions live in memory per replica. A real deployment would take a market-data feed through a backplane (e.g. Azure SignalR Service).
 
 ### Demo data
 
@@ -167,7 +201,7 @@ Multi-stage [`Dockerfile`](Dockerfile): Node builds the SPA → .NET SDK publish
 
 - [Definition of Ready](docs/agile/definition-of-ready.md) · [Definition of Done](docs/agile/definition-of-done.md)
 - [Project board](https://github.com/users/nestoralfaro/projects/3) (two-week sprints, story points)
-- Sprint reviews and retrospectives: [Sprint 0](docs/agile/sprint-0-review.md) · [Sprint 1](docs/agile/sprint-1-review.md)
+- Sprint reviews and retrospectives: [Sprint 0](docs/agile/sprint-0-review.md) · [Sprint 1](docs/agile/sprint-1-review.md) · [Sprint 2](docs/agile/sprint-2-review.md)
 
 ## License
 
