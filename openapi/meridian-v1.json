@@ -406,6 +406,110 @@
           }
         }
       }
+    },
+    "/api/v1/accounts/{accountId}/positions": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "One page of an account\u0027s positions, filtered by symbol or name and sorted on the server.",
+        "description": "sort: symbol, name, quantity, price, marketValue, unrealizedGain, dayChange (default marketValue). order: asc or desc (default desc). pageSize: 1\u201350 (default 10). filter: up to 50 characters.",
+        "operationId": "GetAccountPositions",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "marketValue"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "desc"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionsPageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -739,6 +843,92 @@
           },
           "currency": {
             "type": "string"
+          }
+        }
+      },
+      "PositionResponse": {
+        "required": [
+          "symbol",
+          "name",
+          "assetClass",
+          "quantity",
+          "price",
+          "marketValue",
+          "costBasis",
+          "unrealizedGain",
+          "unrealizedGainPercent",
+          "dayChange"
+        ],
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetClass": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "marketValue": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "costBasis": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "unrealizedGain": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "unrealizedGainPercent": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "dayChange": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          }
+        }
+      },
+      "PositionsPageResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

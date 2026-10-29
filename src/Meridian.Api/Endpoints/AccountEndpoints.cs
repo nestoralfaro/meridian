@@ -24,7 +24,84 @@ internal static class AccountEndpoints
             .WithName("GetAccount")
             .WithSummary("One of the signed-in client's accounts with its holdings. Another client's account is indistinguishable from a missing one.");
 
+        accounts.MapGet("/{accountId:guid}/positions", GetPositionsAsync)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithName("GetAccountPositions")
+            .WithSummary("One page of an account's positions, filtered by symbol or name and sorted on the server.")
+            .WithDescription($"sort: {string.Join(", ", SortFields.Keys)} (default marketValue). order: asc or desc (default desc). " +
+                $"pageSize: 1–{PositionsQuery.MaxPageSize} (default {PositionsQuery.DefaultPageSize}). filter: up to {PositionsQuery.MaxFilterLength} characters.");
+
         return endpoints;
+    }
+
+    /// <summary>The only sort values accepted. Mapped explicitly so numeric or misspelt enum names can't slip through.</summary>
+    private static readonly Dictionary<string, PositionSortField> SortFields = new(StringComparer.Ordinal)
+    {
+        ["symbol"] = PositionSortField.Symbol,
+        ["name"] = PositionSortField.Name,
+        ["quantity"] = PositionSortField.Quantity,
+        ["price"] = PositionSortField.Price,
+        ["marketValue"] = PositionSortField.MarketValue,
+        ["unrealizedGain"] = PositionSortField.UnrealizedGain,
+        ["dayChange"] = PositionSortField.DayChange,
+    };
+
+    private static async Task<Results<Ok<PositionsPageResponse>, ProblemHttpResult, ValidationProblem>> GetPositionsAsync(
+        Guid accountId, ClaimsPrincipal user, AccountQueries queries, IAuditTrail audit, CancellationToken cancellationToken,
+        int page = 1, int pageSize = PositionsQuery.DefaultPageSize, string sort = "marketValue", string order = "desc", string? filter = null)
+    {
+        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        if (page < 1)
+        {
+            errors["page"] = ["Must be 1 or more."];
+        }
+
+        if (pageSize is < 1 or > PositionsQuery.MaxPageSize)
+        {
+            errors["pageSize"] = [$"Must be between 1 and {PositionsQuery.MaxPageSize}."];
+        }
+
+        if (!SortFields.TryGetValue(sort, out var sortBy))
+        {
+            errors["sort"] = [$"Must be one of: {string.Join(", ", SortFields.Keys)}."];
+        }
+
+        if (order is not ("asc" or "desc"))
+        {
+            errors["order"] = ["Must be asc or desc."];
+        }
+
+        if (filter?.Length > PositionsQuery.MaxFilterLength)
+        {
+            errors["filter"] = [$"Must be {PositionsQuery.MaxFilterLength} characters or fewer."];
+        }
+
+        if (errors.Count > 0)
+        {
+            return TypedResults.ValidationProblem(errors);
+        }
+
+        var query = new PositionsQuery(page, pageSize, sortBy, order == "asc" ? SortOrder.Ascending : SortOrder.Descending, filter);
+        var lookup = await queries.GetPositionsAsync(user.ClientIdOf(), accountId, query, cancellationToken).ConfigureAwait(false);
+        switch (lookup.Status)
+        {
+            case AccountLookupStatus.Found:
+                var positions = lookup.Positions!;
+                return TypedResults.Ok(new PositionsPageResponse(
+                    [.. positions.Items.Select(p => new PositionResponse(p.Symbol, p.Name, p.AssetClass.ToString(), p.Quantity,
+                        MoneyResponse.From(p.Price), MoneyResponse.From(p.MarketValue), MoneyResponse.From(p.CostBasis),
+                        MoneyResponse.From(p.UnrealizedGain), p.UnrealizedGainPercent, MoneyResponse.From(p.DayChange)))],
+                    positions.Page, positions.PageSize, positions.TotalCount, positions.TotalPages));
+
+            case AccountLookupStatus.BelongsToAnotherClient:
+                await audit.RecordAsync(new AuditRecord($"user:{user.UserId()}", "AccessDenied", $"account:{accountId}"), cancellationToken).ConfigureAwait(false);
+                return NotFound();
+
+            default:
+                return NotFound();
+        }
     }
 
     private static async Task<Ok<AccountsOverviewResponse>> GetOverviewAsync(ClaimsPrincipal user, AccountQueries queries, CancellationToken cancellationToken)
@@ -95,3 +172,11 @@ internal sealed record HoldingResponse(
 internal sealed record AccountDetailResponse(
     Guid Id, string Name, string Type, string MaskedNumber, MoneyResponse TotalValue, MoneyResponse Cash, MoneyResponse DayChange,
     decimal DayChangePercent, IReadOnlyList<HoldingResponse> Holdings);
+
+/// <param name="UnrealizedGainPercent">Gain as a percentage of cost basis; null when the cost basis is zero.</param>
+internal sealed record PositionResponse(
+    string Symbol, string Name, string AssetClass, decimal Quantity, MoneyResponse Price, MoneyResponse MarketValue, MoneyResponse CostBasis,
+    MoneyResponse UnrealizedGain, decimal? UnrealizedGainPercent, MoneyResponse DayChange);
+
+/// <param name="TotalCount">Positions matching the filter, across all pages.</param>
+internal sealed record PositionsPageResponse(IReadOnlyList<PositionResponse> Items, int Page, int PageSize, int TotalCount, int TotalPages);

@@ -74,6 +74,56 @@ public sealed class AccountQueries(IAccountRepository accounts)
         return new AccountLookup(AccountLookupStatus.Found, new AccountDetail(Summarize(account), holdings));
     }
 
+    /// <summary>
+    /// One page of an account's positions, filtered and sorted. Ties are broken by symbol so pages never overlap or skip.
+    /// Paging happens here rather than in SQL: the account aggregate is loaded anyway (ownership check, valuation needs
+    /// prices), and positions per account are bounded by the number of securities.
+    /// </summary>
+    public async Task<PositionsLookup> GetPositionsAsync(Guid clientId, Guid accountId, PositionsQuery query, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentOutOfRangeException.ThrowIfLessThan(query.Page, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(query.PageSize, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(query.PageSize, PositionsQuery.MaxPageSize);
+
+        var account = await accounts.FindAsync(accountId, cancellationToken).ConfigureAwait(false);
+        if (account is null || account.ClientId != clientId)
+        {
+            return new PositionsLookup(account is null ? AccountLookupStatus.NotFound : AccountLookupStatus.BelongsToAnotherClient, null);
+        }
+
+        var filter = query.Filter?.Trim();
+        var matching = account.Positions
+            .Where(p => string.IsNullOrEmpty(filter)
+                || p.Security.Symbol.Contains(filter, StringComparison.OrdinalIgnoreCase)
+                || p.Security.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+            .Select(p => new PositionView(p.Security.Symbol, p.Security.Name, p.Security.AssetClass, p.Quantity, p.Security.Price,
+                p.MarketValue, p.CostBasis, p.UnrealizedGain, p.UnrealizedGainPercent, p.DayChange))
+            .ToList();
+
+        var sorted = Sort(matching, query.SortBy, query.Order).ThenBy(p => p.Symbol, StringComparer.Ordinal);
+        var page = sorted.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToList();
+        return new PositionsLookup(AccountLookupStatus.Found, new PositionsPage(page, query.Page, query.PageSize, matching.Count));
+    }
+
+    private static IOrderedEnumerable<PositionView> Sort(IEnumerable<PositionView> positions, PositionSortField field, SortOrder order)
+    {
+        return field switch
+        {
+            PositionSortField.Symbol => By(p => p.Symbol, StringComparer.Ordinal),
+            PositionSortField.Name => By(p => p.Name, StringComparer.OrdinalIgnoreCase),
+            PositionSortField.Quantity => By(p => p.Quantity, Comparer<decimal>.Default),
+            PositionSortField.Price => By(p => p.Price.Amount, Comparer<decimal>.Default),
+            PositionSortField.MarketValue => By(p => p.MarketValue.Amount, Comparer<decimal>.Default),
+            PositionSortField.UnrealizedGain => By(p => p.UnrealizedGain.Amount, Comparer<decimal>.Default),
+            PositionSortField.DayChange => By(p => p.DayChange.Amount, Comparer<decimal>.Default),
+            _ => throw new ArgumentOutOfRangeException(nameof(field), field, "Unknown sort field."),
+        };
+
+        IOrderedEnumerable<PositionView> By<TKey>(Func<PositionView, TKey> key, IComparer<TKey> comparer) =>
+            order == SortOrder.Descending ? positions.OrderByDescending(key, comparer) : positions.OrderBy(key, comparer);
+    }
+
     public const int MaxActivityItems = 50;
 
     /// <summary>Newest first; <paramref name="limit"/> is clamped to 1–<see cref="MaxActivityItems"/>.</summary>

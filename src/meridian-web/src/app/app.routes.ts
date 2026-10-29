@@ -24,6 +24,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/dashboard/dashboard-page').then((m) => m.DashboardPage),
   },
   {
+    path: 'accounts/:accountId',
+    title: 'Account | Meridian',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/account/account-page').then((m) => m.AccountPage),
+  },
+  {
     path: 'activity',
     title: 'Activity | Meridian',
     canActivate: [authGuard],
