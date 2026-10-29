@@ -23,7 +23,8 @@ public sealed record AccountsOverview(
     decimal DayChangePercent,
     IReadOnlyList<AllocationSlice> Allocation);
 
-public sealed record HoldingView(string Symbol, string Name, AssetClass AssetClass, decimal Quantity, Money Price, Money MarketValue, Money DayChange);
+public sealed record HoldingView(
+    string Symbol, string Name, AssetClass AssetClass, decimal Quantity, Money Price, Money MarketValue, Money DayChange, Money CostBasis);
 
 public sealed record AccountDetail(AccountSummary Summary, IReadOnlyList<HoldingView> Holdings);
 

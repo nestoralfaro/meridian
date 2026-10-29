@@ -69,7 +69,8 @@ public sealed class AccountQueries(IAccountRepository accounts)
 
         var holdings = account.Positions
             .OrderByDescending(p => p.MarketValue.Amount)
-            .Select(p => new HoldingView(p.Security.Symbol, p.Security.Name, p.Security.AssetClass, p.Quantity, p.Security.Price, p.MarketValue, p.DayChange))
+            .Select(p => new HoldingView(p.Security.Symbol, p.Security.Name, p.Security.AssetClass, p.Quantity, p.Security.Price, p.MarketValue, p.DayChange,
+                p.CostBasis))
             .ToList();
         return new AccountLookup(AccountLookupStatus.Found, new AccountDetail(Summarize(account), holdings));
     }

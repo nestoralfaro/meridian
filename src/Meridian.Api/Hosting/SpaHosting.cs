@@ -11,7 +11,7 @@ internal static class SpaHosting
     private const string IndexFile = "index.html";
 
     /// <summary>Path prefixes owned by the server. Unknown paths under them return 404, never the SPA.</summary>
-    private static readonly string[] ReservedPrefixes = ["/api", "/health"];
+    private static readonly string[] ReservedPrefixes = ["/api", "/health", "/hubs"];
 
     private static readonly StaticFileOptions StaticFiles = new()
     {
