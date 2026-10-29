@@ -105,6 +105,35 @@ public sealed class Account
     public Money Cash { get; private set; }
     public IReadOnlyList<Position> Positions => _positions;
 
+    /// <summary>Changes whenever the account row changes (PostgreSQL <c>xmin</c>); used for optimistic concurrency.</summary>
+    public uint Version { get; private set; }
+
+    /// <summary>Removes cash. Callers check <see cref="Cash"/> first; overdrawing is a bug, not a business outcome.</summary>
+    public void Withdraw(Money amount)
+    {
+        if (amount.Amount <= 0m)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amounts must be positive.");
+        }
+
+        if (amount > Cash)
+        {
+            throw new InvalidOperationException($"Account {Id} has {Cash} available; can't withdraw {amount}.");
+        }
+
+        Cash -= amount;
+    }
+
+    public void Deposit(Money amount)
+    {
+        if (amount.Amount <= 0m)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amounts must be positive.");
+        }
+
+        Cash += amount;
+    }
+
     public Money TotalValue => Cash + _positions.Select(p => p.MarketValue).Sum(Cash.Currency);
 
     public Money DayChange => _positions.Select(p => p.DayChange).Sum(Cash.Currency);
@@ -176,4 +205,66 @@ public sealed class Transaction
     public Money Amount { get; private set; }
     public string? Symbol { get; private set; }
     public decimal? Quantity { get; private set; }
+}
+
+/// <summary>Cash moved between two accounts owned by the same client, recorded once per idempotency key.</summary>
+public sealed class Transfer
+{
+    public const int MaxIdempotencyKeyLength = 64;
+
+    private Transfer(Guid clientId, Guid fromAccountId, Guid toAccountId, Money amount, string idempotencyKey, DateTimeOffset requestedAt)
+    {
+        Id = Guid.CreateVersion7();
+        ClientId = clientId;
+        FromAccountId = fromAccountId;
+        ToAccountId = toAccountId;
+        Amount = amount;
+        IdempotencyKey = idempotencyKey;
+        RequestedAt = requestedAt;
+    }
+
+    private Transfer() => IdempotencyKey = string.Empty; // for EF Core
+
+    public Guid Id { get; private set; }
+    public Guid ClientId { get; private set; }
+    public Guid FromAccountId { get; private set; }
+    public Guid ToAccountId { get; private set; }
+    public Money Amount { get; private set; }
+    public string IdempotencyKey { get; private set; }
+    public DateTimeOffset RequestedAt { get; private set; }
+
+    /// <summary>
+    /// Moves <paramref name="amount"/> and returns the transfer with the activity it adds to each account.
+    /// Business rules (ownership, sufficient cash) are checked by the use case first; violations here are bugs.
+    /// </summary>
+    public static (Transfer Transfer, Transaction Out, Transaction In) Between(
+        Account from, Account to, Money amount, string idempotencyKey, DateTimeOffset requestedAt)
+    {
+        ArgumentNullException.ThrowIfNull(from);
+        ArgumentNullException.ThrowIfNull(to);
+        ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
+        if (from.Id == to.Id)
+        {
+            throw new ArgumentException("A transfer needs two different accounts.", nameof(to));
+        }
+
+        if (from.ClientId != to.ClientId)
+        {
+            throw new ArgumentException("Transfers are only between one client's own accounts.", nameof(to));
+        }
+
+        if (amount.Amount != decimal.Round(amount.Amount, 2))
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Transfers are in whole cents.");
+        }
+
+        from.Withdraw(amount);
+        to.Deposit(amount);
+
+        var transfer = new Transfer(from.ClientId, from.Id, to.Id, amount, idempotencyKey, requestedAt);
+        var date = DateOnly.FromDateTime(requestedAt.UtcDateTime);
+        var @out = new Transaction(Guid.CreateVersion7(), from.Id, date, TransactionType.TransferOut, $"Transfer to {to.Name}", -amount);
+        var @in = new Transaction(Guid.CreateVersion7(), to.Id, date, TransactionType.TransferIn, $"Transfer from {from.Name}", amount);
+        return (transfer, @out, @in);
+    }
 }

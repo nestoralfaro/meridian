@@ -36,6 +36,7 @@ api.MapVersionEndpoints();
 api.MapAuthEndpoints();
 api.MapAccountEndpoints();
 api.MapActivityEndpoints();
+api.MapTransferEndpoints();
 app.MapSpaFallback();
 
 app.Run();

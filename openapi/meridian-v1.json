@@ -69,6 +69,107 @@
         }
       }
     },
+    "/api/v1/transfers": {
+      "post": {
+        "tags": [
+          "Transfers"
+        ],
+        "summary": "Moves cash between two of the signed-in client\u0027s accounts.",
+        "description": "Send a unique Idempotency-Key header (1\u201364 letters, digits, \u0027-\u0027 or \u0027_\u0027) per intended transfer. 201: completed. 200 with Idempotent-Replayed: true: a retry of a completed transfer; nothing moved again. 409: the source account changed since fromAccountVersion was read; review again. 422: insufficient cash, or the key was already used for a different transfer. 404: an account is missing or not yours (indistinguishable).",
+        "operationId": "CreateTransfer",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransferRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/antiforgery": {
       "get": {
         "tags": [
@@ -605,7 +706,8 @@
           "totalValue",
           "cash",
           "dayChange",
-          "dayChangePercent"
+          "dayChangePercent",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -634,6 +736,10 @@
           "dayChangePercent": {
             "type": "number",
             "format": "double"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -716,6 +822,33 @@
           },
           "newPassword": {
             "type": "string"
+          }
+        }
+      },
+      "CreateTransferRequest": {
+        "required": [
+          "fromAccountId",
+          "toAccountId",
+          "amount",
+          "fromAccountVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "fromAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "fromAccountVersion": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -1002,6 +1135,37 @@
           }
         }
       },
+      "TransferResponse": {
+        "required": [
+          "id",
+          "fromAccountId",
+          "toAccountId",
+          "amount",
+          "requestedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/MoneyResponse"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "VersionResponse": {
         "required": [
           "version",
@@ -1025,6 +1189,9 @@
     },
     {
       "name": "Accounts"
+    },
+    {
+      "name": "Transfers"
     },
     {
       "name": "Auth"

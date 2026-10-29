@@ -34,6 +34,8 @@ public readonly record struct Money
 
     public static Money operator *(Money money, decimal factor) => new(money.Amount * factor, money.Currency);
 
+    public static Money operator -(Money money) => new(-money.Amount, money.Currency);
+
     public static bool operator <(Money left, Money right) => left.Amount < SameCurrency(left, right).Amount;
 
     public static bool operator >(Money left, Money right) => left.Amount > SameCurrency(left, right).Amount;
@@ -47,6 +49,8 @@ public readonly record struct Money
     public static Money Subtract(Money left, Money right) => left - right;
 
     public static Money Multiply(Money money, decimal factor) => money * factor;
+
+    public static Money Negate(Money money) => -money;
 
     public int CompareTo(Money other) => Amount.CompareTo(SameCurrency(this, other).Amount);
 

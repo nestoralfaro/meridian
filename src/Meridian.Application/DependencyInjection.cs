@@ -1,4 +1,5 @@
 using Meridian.Application.Accounts;
+using Meridian.Application.Transfers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Meridian.Application;
@@ -10,6 +11,7 @@ public static class DependencyInjection
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<AccountQueries>();
+        services.AddScoped<TransferCommands>();
         return services;
     }
 }

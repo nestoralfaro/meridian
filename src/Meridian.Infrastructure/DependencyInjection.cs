@@ -2,6 +2,7 @@ using Meridian.Application.Accounts;
 using Meridian.Application.Auditing;
 using Meridian.Application.DemoData;
 using Meridian.Application.Identity;
+using Meridian.Application.Transfers;
 using Meridian.Infrastructure.DemoData;
 using Meridian.Infrastructure.Identity;
 using Meridian.Infrastructure.Persistence;
@@ -71,6 +72,7 @@ public static class DependencyInjection
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IAuditTrail, AuditTrail>();
         services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<ITransferStore, TransferStore>();
 
         // Keys that sign session cookies and antiforgery tokens, shared by every replica.
         services.AddDataProtection()

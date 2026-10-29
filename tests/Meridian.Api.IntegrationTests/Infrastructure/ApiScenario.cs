@@ -40,6 +40,9 @@ public sealed class ApiScenario : IAsyncDisposable
         return Track(await Client.SendAsync(request));
     }
 
+    /// <summary>Sends a request built by the caller (custom headers) and tracks its response.</summary>
+    public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request) => Track(await Client.SendAsync(request));
+
     public async Task<string> GetAntiforgeryTokenAsync()
     {
         using var response = await Client.GetAsync(new Uri("/api/v1/auth/antiforgery", UriKind.Relative));

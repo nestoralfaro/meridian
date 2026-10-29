@@ -47,6 +47,12 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Cash", "Meridian.Domain.Account.Cash#Money", b1 =>
                         {
                             b1.IsRequired();
@@ -68,7 +74,10 @@ namespace Meridian.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Accounts_Cash_NotNegative", "\"CashAmount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Meridian.Domain.Client", b =>
@@ -246,6 +255,61 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.HasIndex("AccountId", "Date");
 
                     b.ToTable("Transactions", (string)null);
+                });
+
+            modelBuilder.Entity("Meridian.Domain.Transfer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FromAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ToAccountId")
+                        .HasColumnType("uuid");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Amount", "Meridian.Domain.Transfer.Amount#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("numeric(19,4)")
+                                .HasColumnName("AmountAmount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character(3)")
+                                .HasColumnName("AmountCurrency")
+                                .IsFixedLength();
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromAccountId");
+
+                    b.HasIndex("ToAccountId");
+
+                    b.HasIndex("ClientId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.ToTable("Transfers", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Transfers_Amount_Positive", "\"AmountAmount\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("Meridian.Infrastructure.Identity.ApplicationUser", b =>
@@ -496,6 +560,27 @@ namespace Meridian.Infrastructure.Persistence.Migrations
                     b.HasOne("Meridian.Domain.Account", null)
                         .WithMany()
                         .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Meridian.Domain.Transfer", b =>
+                {
+                    b.HasOne("Meridian.Domain.Client", null)
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Meridian.Domain.Account", null)
+                        .WithMany()
+                        .HasForeignKey("FromAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Meridian.Domain.Account", null)
+                        .WithMany()
+                        .HasForeignKey("ToAccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
