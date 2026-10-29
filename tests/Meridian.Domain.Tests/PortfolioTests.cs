@@ -15,6 +15,26 @@ public sealed class PortfolioTests
     }
 
     [Fact]
+    public void UnrealizedGainIsMarketValueMinusCostBasis()
+    {
+        var gain = new Position(TotalMarketFund, quantity: 40m, costBasis: Money.Usd(8800m));
+        var loss = new Position(Acme, quantity: 10m, costBasis: Money.Usd(1400m));
+
+        gain.UnrealizedGain.ShouldBe(Money.Usd(1012.00m)); // 9812.00 - 8800.00
+        gain.UnrealizedGainPercent.ShouldBe(11.50m);       // 1012 / 8800 = 0.115
+        loss.UnrealizedGain.ShouldBe(Money.Usd(-112.50m));  // 1287.50 - 1400.00
+        loss.UnrealizedGainPercent.ShouldBe(-8.04m);       // -112.50 / 1400 = -0.080357…
+    }
+
+    [Fact]
+    public void UnrealizedGainPercentIsUndefinedWithoutACostBasis()
+    {
+        var gifted = new Position(Acme, quantity: 1m, costBasis: Money.Usd(0m));
+
+        gifted.UnrealizedGainPercent.ShouldBeNull();
+    }
+
+    [Fact]
     public void AnAccountIsWorthItsCashPlusItsPositions()
     {
         var account = DanasBrokerage();

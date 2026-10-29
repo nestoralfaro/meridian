@@ -51,7 +51,9 @@
         @for (account of overview.accounts; track account.id) {
           <li class="account" data-testid="account">
             <div class="account__identity">
-              <span class="account__name">{{ account.name }}</span>
+              <a class="account__name" [routerLink]="['/accounts', account.id]">{{
+                account.name
+              }}</a>
               <span class="account__number">{{ account.maskedNumber }}</span>
             </div>
             <span class="account__value">{{ money(account.totalValue) }}</span>

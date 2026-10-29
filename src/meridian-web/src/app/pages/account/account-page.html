@@ -1,0 +1,172 @@
+<p class="back"><a routerLink="/dashboard">← Dashboard</a></p>
+<h1>{{ detail()?.name ?? 'Account' }}</h1>
+
+@let problem = accountProblem();
+@if (problem?.notFound) {
+  <p class="empty">
+    We couldn't find that account. It may have been closed, or the link may be wrong.
+  </p>
+} @else if (problem) {
+  <div class="problem" role="alert">
+    <p class="problem__title">Sorry, we couldn't load this account right now.</p>
+    @if (problem.referenceId) {
+      <p class="problem__reference">
+        If this keeps happening, contact support with reference ID
+        <code>{{ problem.referenceId }}</code
+        >.
+      </p>
+    }
+    <button type="button" class="button-secondary" (click)="reload()">Try again</button>
+  </div>
+} @else {
+  @let account = detail();
+  @if (account) {
+    <section class="summary" aria-label="Account summary">
+      <p class="summary__number">Account {{ account.maskedNumber }}</p>
+      <dl class="summary__figures">
+        <div>
+          <dt>Total value</dt>
+          <dd data-testid="account-total">{{ money(account.totalValue) }}</dd>
+        </div>
+        <div>
+          <dt>Cash</dt>
+          <dd>{{ money(account.cash) }}</dd>
+        </div>
+        <div>
+          <dt>Today</dt>
+          <dd
+            class="change"
+            [class.change--up]="account.dayChange.amount > 0"
+            [class.change--down]="account.dayChange.amount < 0"
+            [attr.aria-label]="describe(account.dayChange, account.dayChangePercent)"
+          >
+            {{ change(account.dayChange) }} ({{ percent(account.dayChangePercent) }})
+          </dd>
+        </div>
+      </dl>
+    </section>
+  } @else {
+    <div class="skeleton skeleton--summary" aria-busy="true" aria-label="Loading account"></div>
+  }
+
+  <section class="positions" aria-labelledby="positions-heading">
+    <div class="positions__header">
+      <h2 id="positions-heading">Positions</h2>
+      <label class="filter">
+        <span>Filter by symbol or name</span>
+        <input
+          type="search"
+          maxlength="50"
+          autocomplete="off"
+          (input)="onFilterInput($any($event.target).value)"
+        />
+      </label>
+    </div>
+
+    <p class="visually-hidden" role="status" aria-live="polite">{{ summary() }}</p>
+
+    @let positionsError = positionsProblem();
+    @let current = rows();
+    @if (positionsError && !positionsError.notFound) {
+      <div class="problem" role="alert">
+        <p class="problem__title">Sorry, we couldn't load the positions.</p>
+        <button type="button" class="button-secondary" (click)="reload()">Try again</button>
+      </div>
+    } @else if (current) {
+      @if (current.totalCount === 0) {
+        <p class="empty">
+          @if (filter()) {
+            No positions match “{{ filter() }}”.
+          } @else {
+            This account holds only cash.
+          }
+        </p>
+      } @else {
+        <div
+          class="table-scroll"
+          tabindex="0"
+          role="region"
+          aria-labelledby="positions-heading"
+          [attr.aria-busy]="positionsLoading()"
+        >
+          <table class="positions__table">
+            <thead>
+              <tr>
+                @for (column of columns; track column.key) {
+                  <th
+                    scope="col"
+                    [class.numeric]="column.numeric"
+                    [attr.aria-sort]="ariaSort(column)"
+                  >
+                    <button type="button" class="sort" (click)="sortBy(column)">
+                      {{ column.label }}
+                      <span class="sort__icon" aria-hidden="true">{{
+                        ariaSort(column) === 'ascending'
+                          ? '▲'
+                          : ariaSort(column) === 'descending'
+                            ? '▼'
+                            : '↕'
+                      }}</span>
+                    </button>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of current.items; track p.symbol) {
+                <tr data-testid="position">
+                  <th scope="row">{{ p.symbol }}</th>
+                  <td>{{ p.name }}</td>
+                  <td class="numeric">{{ p.displayQuantity }}</td>
+                  <td class="numeric">{{ p.displayPrice }}</td>
+                  <td class="numeric">{{ p.displayMarketValue }}</td>
+                  <td
+                    class="numeric change"
+                    [class.change--up]="p.unrealizedGain.amount > 0"
+                    [class.change--down]="p.unrealizedGain.amount < 0"
+                  >
+                    {{ p.displayGain }}
+                    @if (p.displayGainPercent) {
+                      <span class="sub">({{ p.displayGainPercent }})</span>
+                    }
+                  </td>
+                  <td
+                    class="numeric change"
+                    [class.change--up]="p.dayChange.amount > 0"
+                    [class.change--down]="p.dayChange.amount < 0"
+                  >
+                    {{ p.displayDayChange }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (current.totalPages > 1) {
+          <nav class="pager" aria-label="Positions pages">
+            <button
+              type="button"
+              class="button-secondary"
+              [disabled]="current.page <= 1"
+              (click)="goTo(current.page - 1)"
+            >
+              Previous
+            </button>
+            <span>Page {{ current.page }} of {{ current.totalPages }}</span>
+            <button
+              type="button"
+              class="button-secondary"
+              [disabled]="current.page >= current.totalPages"
+              (click)="goTo(current.page + 1)"
+            >
+              Next
+            </button>
+          </nav>
+        }
+      }
+    } @else {
+      <div class="skeleton skeleton--table" aria-busy="true" aria-label="Loading positions"></div>
+    }
+  </section>
+}

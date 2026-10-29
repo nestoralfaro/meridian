@@ -65,6 +65,13 @@ public sealed class Position
     public Money MarketValue => (Security.Price * Quantity).RoundToCents();
 
     public Money DayChange => ((Security.Price - Security.PreviousClose) * Quantity).RoundToCents();
+
+    /// <summary>Market value minus what was paid (not yet realized by a sale).</summary>
+    public Money UnrealizedGain => MarketValue - CostBasis;
+
+    /// <summary>Unrealized gain as a percentage of cost basis, to two decimal places; null when the cost basis is zero.</summary>
+    public decimal? UnrealizedGainPercent =>
+        CostBasis.Amount == 0m ? null : Math.Round(UnrealizedGain.Amount / CostBasis.Amount * 100m, 2, MidpointRounding.ToEven);
 }
 
 public sealed class Account

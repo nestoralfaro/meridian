@@ -95,6 +95,27 @@ export type MoneyResponse = {
   currency: string;
 };
 
+export type PositionResponse = {
+  symbol: string;
+  name: string;
+  assetClass: string;
+  quantity: number;
+  price: MoneyResponse;
+  marketValue: MoneyResponse;
+  costBasis: MoneyResponse;
+  unrealizedGain: MoneyResponse;
+  unrealizedGainPercent: null | number;
+  dayChange: MoneyResponse;
+};
+
+export type PositionsPageResponse = {
+  items: Array<PositionResponse>;
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};
+
 export type ProblemDetails = {
   type?: null | string;
   title?: null | string;
@@ -401,3 +422,45 @@ export type GetAccountResponses = {
 };
 
 export type GetAccountResponse = GetAccountResponses[keyof GetAccountResponses];
+
+export type GetAccountPositionsData = {
+  body?: never;
+  path: {
+    accountId: string;
+  };
+  query?: {
+    page?: number;
+    pageSize?: number;
+    sort?: string;
+    order?: string;
+    filter?: string;
+  };
+  url: '/api/v1/accounts/{accountId}/positions';
+};
+
+export type GetAccountPositionsErrors = {
+  /**
+   * Bad Request
+   */
+  400: HttpValidationProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+  /**
+   * Not Found
+   */
+  404: ProblemDetails;
+};
+
+export type GetAccountPositionsError = GetAccountPositionsErrors[keyof GetAccountPositionsErrors];
+
+export type GetAccountPositionsResponses = {
+  /**
+   * OK
+   */
+  200: PositionsPageResponse;
+};
+
+export type GetAccountPositionsResponse =
+  GetAccountPositionsResponses[keyof GetAccountPositionsResponses];
