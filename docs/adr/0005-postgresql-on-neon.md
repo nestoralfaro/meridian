@@ -26,7 +26,7 @@ The app needs a relational database for accounts, transfers, audit events and co
 
 ## Consequences
 
-- PostgreSQL rather than SQL Server: worth calling out in interviews; the EF Core abstraction keeps the switch cost bounded.
+- PostgreSQL rather than SQL Server: a deliberate trade-off for cost; the EF Core abstraction keeps the switch cost bounded.
 - The Neon project is in AWS `us-east-2` while the app runs in Azure `eastus2`, so each database round trip crosses regions (a few ms). Acceptable for a demo; co-locate if latency matters.
 - Readiness probes query the database, which keeps Neon compute awake while app replicas run. With scale-to-zero replicas, that's only while the demo is in use, within the free compute allowance.
 - Staging can be refreshed from production with Neon "reset from parent". Fine with synthetic data; never with real client data.

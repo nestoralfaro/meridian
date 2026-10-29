@@ -71,6 +71,9 @@ jobs:
 
       - run: npm ci --no-audit --no-fund
 
+      - name: No high-severity npm advisories
+        run: npm audit --omit=optional --audit-level=high
+
       - name: API types match the committed contract (openapi/meridian-v1.json)
         run: |
           npm run api:generate
@@ -170,6 +173,9 @@ jobs:
           exit 1
 
       - run: npm ci --no-audit --no-fund
+
+      - name: No high-severity npm advisories
+        run: npm audit --omit=optional --audit-level=high
 
       - run: npm run typecheck
 
