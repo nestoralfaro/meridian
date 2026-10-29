@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  type OnInit,
   computed,
   inject,
   input,
@@ -11,6 +12,7 @@ import {
 import { RouterLink } from '@angular/router';
 import type { AccountDetailResponse, PositionsPageResponse } from '../../core/api';
 import { AuthService } from '../../core/auth/auth.service';
+import { LiveQuotes, type LivePosition } from '../../core/quotes/live-quotes';
 import {
   describeChange,
   formatChange,
@@ -33,6 +35,7 @@ export const PAGE_SIZE = 10;
 export const FILTER_DEBOUNCE_MS = 300;
 
 const quantityFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 });
+const timeFormat = new Intl.DateTimeFormat('en-US', { timeStyle: 'medium' });
 
 /** One account: its value, and its positions sorted, filtered and paged on the server. */
 @Component({
@@ -40,13 +43,15 @@ const quantityFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 4
   imports: [RouterLink],
   templateUrl: './account-page.html',
   styleUrl: './account-page.scss',
+  providers: [LiveQuotes],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AccountPage {
+export class AccountPage implements OnInit {
   /** From the route (`/accounts/:accountId`). */
   readonly accountId = input.required<string>();
 
   private readonly auth = inject(AuthService);
+  protected readonly live = inject(LiveQuotes);
 
   protected readonly columns: readonly Column[] = [
     { key: 'symbol', label: 'Symbol', numeric: false },
@@ -98,19 +103,66 @@ export class AccountPage {
       return null;
     }
     const value = this.positions.value();
+    const live = new Map<string, LivePosition>(
+      (this.live.latest()?.positions ?? []).map((p) => [p.symbol, p]),
+    );
     return {
       ...value,
-      items: value.items.map((p) => ({
-        ...p,
-        displayQuantity: quantityFormat.format(p.quantity),
-        displayPrice: formatMoney(p.price),
-        displayMarketValue: formatMoney(p.marketValue),
-        displayGain: formatChange(p.unrealizedGain),
-        displayGainPercent:
-          p.unrealizedGainPercent === null ? '' : formatPercentChange(p.unrealizedGainPercent),
-        displayDayChange: formatChange(p.dayChange),
-      })),
+      items: value.items.map((stored) => {
+        // Live figures (computed on the server) replace the close-of-day ones when they arrive.
+        const p = { ...stored, ...live.get(stored.symbol) };
+        return {
+          ...p,
+          displayQuantity: quantityFormat.format(p.quantity),
+          displayPrice: formatMoney(p.price),
+          displayMarketValue: formatMoney(p.marketValue),
+          displayGain: formatChange(p.unrealizedGain),
+          displayGainPercent:
+            p.unrealizedGainPercent === null ? '' : formatPercentChange(p.unrealizedGainPercent),
+          displayDayChange: formatChange(p.dayChange),
+        };
+      }),
     };
+  });
+
+  /** Account totals: live when streaming, otherwise as of the last close. */
+  protected readonly totals = computed(() => {
+    const account = this.detail();
+    const latest = this.live.latest();
+    if (!account) {
+      return null;
+    }
+    return latest
+      ? { totalValue: latest.totalValue, dayChange: latest.dayChange }
+      : { totalValue: account.totalValue, dayChange: account.dayChange };
+  });
+
+  /** Updated every tick, so it is not a live region (that would interrupt screen readers constantly). */
+  protected readonly liveLabel = computed(() => {
+    const latest = this.live.latest();
+    switch (this.live.status()) {
+      case 'live':
+        return `Live prices · updated ${latest ? timeFormat.format(new Date(latest.asOf)) : ''}`;
+      case 'paused':
+        return latest
+          ? `Prices paused, reconnecting… Last updated ${timeFormat.format(new Date(latest.asOf))}`
+          : 'Prices as of the last close';
+      case 'connecting':
+      case 'off':
+        return 'Prices as of the last close';
+    }
+  });
+
+  /** Announced politely, only when the connection state changes. */
+  protected readonly liveAnnouncement = computed(() => {
+    switch (this.live.status()) {
+      case 'live':
+        return 'Live prices on.';
+      case 'paused':
+        return 'Live prices paused.';
+      default:
+        return '';
+    }
   });
 
   protected readonly positionsLoading = this.positions.isLoading;
@@ -140,7 +192,14 @@ export class AccountPage {
   private filterTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.filterTimer));
+    inject(DestroyRef).onDestroy(() => {
+      clearTimeout(this.filterTimer);
+      void this.live.stop();
+    });
+  }
+
+  ngOnInit(): void {
+    void this.live.watch(this.accountId());
   }
 
   /** Same column flips the order; a new column starts where it's most useful (A→Z, largest first). */

@@ -5,6 +5,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { AuthService } from '../../core/auth/auth.service';
+import {
+  QUOTES_CONNECTION_FACTORY,
+  type LiveUpdate,
+  type QuotesConnection,
+} from '../../core/quotes/live-quotes';
 import { AccountPage, FILTER_DEBOUNCE_MS } from './account-page';
 
 const usd = (amount: number) => ({ amount, currency: 'USD' });
@@ -40,13 +45,45 @@ const pageOf = (items: object[], page = 1, totalCount = items.length, totalPages
   totalPages,
 });
 
+/** A stand-in for the SignalR connection: tests push updates and flip connection states. */
+class FakeConnection implements QuotesConnection {
+  readonly handlers: { positions?: (u: LiveUpdate) => void; reconnecting?: () => void } = {};
+  watched: string[] = [];
+  watchResult = true;
+  on(_: 'positions', handler: (u: LiveUpdate) => void) {
+    this.handlers.positions = handler;
+  }
+  onreconnecting(handler: () => void) {
+    this.handlers.reconnecting = handler;
+  }
+  onreconnected() {
+    // not exercised
+  }
+  onclose() {
+    // not exercised
+  }
+  start() {
+    return Promise.resolve();
+  }
+  stop() {
+    return Promise.resolve();
+  }
+  invoke(_: 'WatchAccount', accountId: string) {
+    this.watched.push(accountId);
+    return Promise.resolve(this.watchResult);
+  }
+}
+
 describe('AccountPage', () => {
   let http: HttpTestingController;
+  let connection: FakeConnection;
 
   beforeEach(() => {
+    connection = new FakeConnection();
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
+        { provide: QUOTES_CONNECTION_FACTORY, useValue: () => Promise.resolve(connection) },
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -210,5 +247,47 @@ describe('AccountPage', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.textContent).toContain("We couldn't find that account.");
     expect(element.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('shows live values computed on the server, and says when they pause', async () => {
+    const { fixture, element } = await render();
+    expect(connection.watched).toEqual([accountId]);
+    expect(element.querySelector('[data-testid="live-status"]')?.textContent).toContain(
+      'Prices as of the last close',
+    );
+
+    connection.handlers.positions!({
+      asOf: '2026-10-29T15:04:05Z',
+      totalValue: usd(127500.12),
+      dayChange: usd(530.12),
+      positions: [
+        {
+          symbol: 'MDTOT',
+          price: usd(245.42),
+          marketValue: usd(73626),
+          dayChange: usd(696),
+          unrealizedGain: usd(12426),
+          unrealizedGainPercent: 20.3,
+        },
+      ],
+    });
+    await settle(fixture);
+
+    const row = element.querySelector('[data-testid="position"]')!;
+    expect(row.textContent).toContain('$245.42');
+    expect(row.textContent).toContain('$73,626.00');
+    expect(row.textContent).toContain('+$12,426.00');
+    expect(element.querySelector('[data-testid="account-total"]')?.textContent).toContain(
+      '$127,500.12',
+    );
+    expect(element.querySelector('[data-testid="live-status"]')?.textContent).toContain(
+      'Live prices',
+    );
+
+    connection.handlers.reconnecting!();
+    await settle(fixture);
+    expect(element.querySelector('[data-testid="live-status"]')?.textContent).toContain(
+      'Prices paused, reconnecting',
+    );
   });
 });

@@ -1,4 +1,5 @@
 using Meridian.Application.Accounts;
+using Meridian.Application.Quotes;
 using Meridian.Application.Transfers;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +13,7 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<AccountQueries>();
         services.AddScoped<TransferCommands>();
+        services.AddSingleton<QuoteBoard>();
         return services;
     }
 }

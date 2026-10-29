@@ -75,4 +75,19 @@ test.describe('positions', () => {
     ).toBeVisible();
     await expectNoSeriousA11yViolations(page);
   });
+
+  test('prices go live while the page is open, without interrupting screen readers', async ({
+    page,
+  }) => {
+    await signInAs(page, 'Dana');
+    await page.getByRole('link', { name: 'Individual Brokerage' }).click();
+    const status = page.getByTestId('live-status');
+
+    await expect(status).toContainText('Live prices · updated', {
+      timeout: 15_000,
+    });
+    await expect(status).not.toHaveAttribute('aria-live'); // ticks are silent
+    await expect(page.getByTestId('position')).toHaveCount(2);
+    await expectNoSeriousA11yViolations(page);
+  });
 });

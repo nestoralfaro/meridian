@@ -1,6 +1,7 @@
 using Meridian.Api.Auth;
 using Meridian.Api.Endpoints;
 using Meridian.Api.Hosting;
+using Meridian.Api.Realtime;
 using Meridian.Application;
 using Meridian.Infrastructure;
 
@@ -18,6 +19,9 @@ builder.Services
     .AddInfrastructure(builder.Configuration);
 builder.Services.Configure<DemoDataOptions>(builder.Configuration.GetSection(DemoDataOptions.Section));
 builder.Services.AddHostedService<DemoDataMaintenance>();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<LiveSubscriptions>();
+builder.Services.AddHostedService<QuoteTicker>();
 
 var app = builder.Build();
 
@@ -38,6 +42,7 @@ api.MapAccountEndpoints();
 api.MapActivityEndpoints();
 api.MapTransferEndpoints();
 api.MapPlannerEndpoints();
+app.MapHub<QuotesHub>(QuotesHub.Path);
 app.MapSpaFallback();
 
 app.Run();

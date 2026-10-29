@@ -26,7 +26,7 @@
       <dl class="summary__figures">
         <div>
           <dt>Total value</dt>
-          <dd data-testid="account-total">{{ money(account.totalValue) }}</dd>
+          <dd data-testid="account-total">{{ money(totals()!.totalValue) }}</dd>
         </div>
         <div>
           <dt>Cash</dt>
@@ -36,11 +36,10 @@
           <dt>Today</dt>
           <dd
             class="change"
-            [class.change--up]="account.dayChange.amount > 0"
-            [class.change--down]="account.dayChange.amount < 0"
-            [attr.aria-label]="describe(account.dayChange, account.dayChangePercent)"
+            [class.change--up]="totals()!.dayChange.amount > 0"
+            [class.change--down]="totals()!.dayChange.amount < 0"
           >
-            {{ change(account.dayChange) }} ({{ percent(account.dayChangePercent) }})
+            {{ change(totals()!.dayChange) }}
           </dd>
         </div>
       </dl>
@@ -63,7 +62,11 @@
       </label>
     </div>
 
+    <p class="live" [attr.data-status]="live.status()" data-testid="live-status">
+      <span class="live__dot" aria-hidden="true"></span>{{ liveLabel() }}
+    </p>
     <p class="visually-hidden" role="status" aria-live="polite">{{ summary() }}</p>
+    <p class="visually-hidden" aria-live="polite">{{ liveAnnouncement() }}</p>
 
     @let positionsError = positionsProblem();
     @let current = rows();
