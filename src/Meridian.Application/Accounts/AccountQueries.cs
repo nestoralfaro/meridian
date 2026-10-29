@@ -134,7 +134,8 @@ public sealed class AccountQueries(IAccountRepository accounts)
     }
 
     private static AccountSummary Summarize(Account account) =>
-        new(account.Id, account.Name, account.Type, account.MaskedNumber, account.TotalValue, account.Cash, account.DayChange, account.DayChangePercent);
+        new(account.Id, account.Name, account.Type, account.MaskedNumber, account.TotalValue, account.Cash, account.DayChange, account.DayChangePercent,
+            account.Version);
 
     /// <summary>Day change as a percentage of the previous value, to two decimal places.</summary>
     private static decimal PercentOf(Money dayChange, Money total)

@@ -46,6 +46,7 @@ internal sealed class DemoDataSeeder(MeridianDbContext db, TimeProvider clock) :
         var demoAccounts = db.Accounts.Where(a => demoClientIds.Contains(a.ClientId)).Select(a => a.Id);
 
         // Children first.
+        await db.Transfers.Where(t => demoClientIds.Contains(t.ClientId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await db.Transactions.Where(t => demoAccounts.Contains(t.AccountId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await db.Positions.Where(p => demoAccounts.Contains(p.AccountId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
         await db.Accounts.Where(a => demoClientIds.Contains(a.ClientId)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);

@@ -25,6 +25,7 @@ export class App {
   protected readonly navItems: readonly NavItem[] = [
     { label: 'Home', path: '/', exact: true },
     { label: 'Dashboard', path: '/dashboard', exact: false },
+    { label: 'Move money', path: '/transfer', exact: false },
   ];
 
   /** Build info is decorative: if the API is unavailable the footer simply omits it. */

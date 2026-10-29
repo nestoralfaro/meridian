@@ -54,6 +54,12 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         account.HasMany(a => a.Positions).WithOne().HasForeignKey(p => p.AccountId).OnDelete(DeleteBehavior.Cascade);
         account.Navigation(a => a.Positions).UsePropertyAccessMode(PropertyAccessMode.Field);
         account.HasIndex(a => a.ClientId);
+
+        // PostgreSQL's xmin system column: changes on every update, so EF Core adds "AND xmin = @version" to UPDATEs.
+        account.Property(a => a.Version).IsRowVersion();
+
+        // Defence in depth: the use case checks available cash, and the database refuses an overdraft regardless.
+        account.ToTable(t => t.HasCheckConstraint("CK_Accounts_Cash_NotNegative", "\"CashAmount\" >= 0"));
         account.Ignore(a => a.TotalValue);
         account.Ignore(a => a.DayChange);
         account.Ignore(a => a.DayChangePercent);
@@ -88,6 +94,23 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         transaction.ComplexProperty(t => t.Amount, m => MoneyMapping.Map(m, "Amount"));
         transaction.HasOne<Account>().WithMany().HasForeignKey(t => t.AccountId).OnDelete(DeleteBehavior.Cascade);
         transaction.HasIndex(t => new { t.AccountId, t.Date });
+    }
+}
+
+internal sealed class TransferConfiguration : IEntityTypeConfiguration<Transfer>
+{
+    public void Configure(EntityTypeBuilder<Transfer> transfer)
+    {
+        transfer.ToTable("Transfers", t => t.HasCheckConstraint("CK_Transfers_Amount_Positive", "\"AmountAmount\" > 0"));
+        transfer.HasKey(t => t.Id);
+        transfer.Property(t => t.IdempotencyKey).HasMaxLength(Transfer.MaxIdempotencyKeyLength);
+        transfer.ComplexProperty(t => t.Amount, m => MoneyMapping.Map(m, "Amount"));
+        transfer.HasOne<Client>().WithMany().HasForeignKey(t => t.ClientId).OnDelete(DeleteBehavior.Cascade);
+        transfer.HasOne<Account>().WithMany().HasForeignKey(t => t.FromAccountId).OnDelete(DeleteBehavior.Cascade);
+        transfer.HasOne<Account>().WithMany().HasForeignKey(t => t.ToAccountId).OnDelete(DeleteBehavior.Cascade);
+
+        // One transfer per client and key: the database settles races between concurrent retries.
+        transfer.HasIndex(t => new { t.ClientId, t.IdempotencyKey }).IsUnique();
     }
 }
 

@@ -1,0 +1,153 @@
+<h1>Move money</h1>
+<p class="intro">Transfer cash between your own Meridian accounts. Transfers happen immediately.</p>
+
+@switch (step()) {
+  @case ('edit') {
+    <h2 #stepHeading tabindex="-1">Transfer details</h2>
+    @if (accounts.state().status === 'loading') {
+      <div class="skeleton" aria-busy="true" aria-label="Loading your accounts"></div>
+    } @else if (ownAccounts().length < 2) {
+      <p class="empty">You need at least two accounts to move money between them.</p>
+    } @else {
+      <form class="form" [formGroup]="form" (ngSubmit)="toReview()" novalidate>
+        @if (summary().length > 0) {
+          <div class="error-summary" id="transfer-error-summary" role="alert" tabindex="-1">
+            <p class="error-summary__title">Please check the following:</p>
+            <ul>
+              @for (message of summary(); track message) {
+                <li>{{ message }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="field">
+          <label for="transfer-fromAccountId">From</label>
+          <select
+            id="transfer-fromAccountId"
+            formControlName="fromAccountId"
+            [attr.aria-invalid]="errorsFor('fromAccountId').length > 0"
+            [attr.aria-describedby]="
+              errorsFor('fromAccountId').length > 0 ? 'transfer-fromAccountId-error' : null
+            "
+          >
+            <option value="">Choose an account</option>
+            @for (account of ownAccounts(); track account.id) {
+              <option [value]="account.id">
+                {{ account.name }} {{ account.maskedNumber }} · {{ money(account.cash) }} cash
+              </option>
+            }
+          </select>
+          @if (errorsFor('fromAccountId').length > 0) {
+            <p id="transfer-fromAccountId-error" class="field__error">
+              {{ errorsFor('fromAccountId').join(' ') }}
+            </p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="transfer-toAccountId">To</label>
+          <select
+            id="transfer-toAccountId"
+            formControlName="toAccountId"
+            [attr.aria-invalid]="errorsFor('toAccountId').length > 0"
+            [attr.aria-describedby]="
+              errorsFor('toAccountId').length > 0 ? 'transfer-toAccountId-error' : null
+            "
+          >
+            <option value="">Choose an account</option>
+            @for (account of ownAccounts(); track account.id) {
+              <option [value]="account.id">{{ account.name }} {{ account.maskedNumber }}</option>
+            }
+          </select>
+          @if (errorsFor('toAccountId').length > 0) {
+            <p id="transfer-toAccountId-error" class="field__error">
+              {{ errorsFor('toAccountId').join(' ') }}
+            </p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="transfer-amount">Amount (USD)</label>
+          <input
+            id="transfer-amount"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            formControlName="amount"
+            [attr.aria-invalid]="errorsFor('amount').length > 0"
+            [attr.aria-describedby]="
+              errorsFor('amount').length > 0
+                ? 'transfer-amount-hint transfer-amount-error'
+                : 'transfer-amount-hint'
+            "
+          />
+          <p id="transfer-amount-hint" class="field__hint">
+            Up to the cash available in the account.
+          </p>
+          @if (errorsFor('amount').length > 0) {
+            <p id="transfer-amount-error" class="field__error">
+              {{ errorsFor('amount').join(' ') }}
+            </p>
+          }
+        </div>
+
+        <button type="submit" class="button">Review transfer</button>
+      </form>
+    }
+  }
+
+  @case ('review') {
+    @let r = review()!;
+    <h2 #stepHeading tabindex="-1">Review your transfer</h2>
+    <dl class="review">
+      <div>
+        <dt>From</dt>
+        <dd>{{ r.from.name }} {{ r.from.maskedNumber }}</dd>
+      </div>
+      <div>
+        <dt>To</dt>
+        <dd>{{ r.to.name }} {{ r.to.maskedNumber }}</dd>
+      </div>
+      <div>
+        <dt>Amount</dt>
+        <dd class="review__amount">{{ money({ amount: r.amount, currency: 'USD' }) }}</dd>
+      </div>
+    </dl>
+
+    @if (retryMessage(); as retry) {
+      <div class="error-summary" role="alert">
+        <p class="error-summary__title">{{ retry.message }}</p>
+        @if (retry.referenceId) {
+          <p class="field__hint">
+            Reference ID <code>{{ retry.referenceId }}</code>
+          </p>
+        }
+      </div>
+    }
+
+    <div class="actions">
+      <button type="button" class="button" [disabled]="busy()" (click)="confirm()">
+        {{ busy() ? 'Transferring…' : retryMessage() ? 'Try again' : 'Confirm transfer' }}
+      </button>
+      <button type="button" class="button-secondary" [disabled]="busy()" (click)="edit()">
+        Edit
+      </button>
+    </div>
+  }
+
+  @case ('done') {
+    @let r = review()!;
+    <h2 #stepHeading tabindex="-1">Transfer complete</h2>
+    <p role="status">
+      {{ money({ amount: r.amount, currency: 'USD' }) }} moved from {{ r.from.name }} to
+      {{ r.to.name }}.
+    </p>
+    <div class="actions">
+      <a class="button" routerLink="/dashboard">Back to dashboard</a>
+      <button type="button" class="button-secondary" (click)="another()">
+        Make another transfer
+      </button>
+    </div>
+  }
+}

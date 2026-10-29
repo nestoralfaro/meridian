@@ -60,7 +60,7 @@ describe('App shell', () => {
 
     const nav = page.querySelector('nav[aria-label="Primary"]');
     const links = Array.from(nav?.querySelectorAll('a') ?? []).map((a) => a.textContent?.trim());
-    expect(links).toEqual(['Home', 'Dashboard']);
+    expect(links).toEqual(['Home', 'Dashboard', 'Move money']);
   });
 
   it('renders routed content inside the main landmark', async () => {

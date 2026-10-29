@@ -23,6 +23,7 @@ internal sealed class MeridianDbContext(DbContextOptions<MeridianDbContext> opti
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<Transfer> Transfers => Set<Transfer>();
     public DbSet<DemoDataState> DemoDataState => Set<DemoDataState>();
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 

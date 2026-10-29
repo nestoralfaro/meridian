@@ -33,6 +33,7 @@ export type AccountSummaryResponse = {
   cash: MoneyResponse;
   dayChange: MoneyResponse;
   dayChangePercent: number;
+  version: number;
 };
 
 export type ActivityItemResponse = {
@@ -57,6 +58,13 @@ export type AllocationSliceResponse = {
 export type ChangePasswordRequest = {
   currentPassword: string;
   newPassword: string;
+};
+
+export type CreateTransferRequest = {
+  fromAccountId: string;
+  toAccountId: string;
+  amount: number;
+  fromAccountVersion: number;
 };
 
 export type DemoSignInRequest = {
@@ -135,6 +143,14 @@ export type SignInRequest = {
   password: string;
 };
 
+export type TransferResponse = {
+  id: string;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: MoneyResponse;
+  requestedAt: string;
+};
+
 export type VersionResponse = {
   version: string;
   commit: string;
@@ -183,6 +199,54 @@ export type GetRecentActivityResponses = {
 
 export type GetRecentActivityResponse =
   GetRecentActivityResponses[keyof GetRecentActivityResponses];
+
+export type CreateTransferData = {
+  body: CreateTransferRequest;
+  headers?: {
+    'Idempotency-Key'?: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/transfers';
+};
+
+export type CreateTransferErrors = {
+  /**
+   * Bad Request
+   */
+  400: HttpValidationProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+  /**
+   * Not Found
+   */
+  404: ProblemDetails;
+  /**
+   * Conflict
+   */
+  409: ProblemDetails;
+  /**
+   * Unprocessable Entity
+   */
+  422: ProblemDetails;
+};
+
+export type CreateTransferError = CreateTransferErrors[keyof CreateTransferErrors];
+
+export type CreateTransferResponses = {
+  /**
+   * OK
+   */
+  200: TransferResponse;
+  /**
+   * Created
+   */
+  201: TransferResponse;
+};
+
+export type CreateTransferResponse = CreateTransferResponses[keyof CreateTransferResponses];
 
 export type GetAntiforgeryTokenData = {
   body?: never;
