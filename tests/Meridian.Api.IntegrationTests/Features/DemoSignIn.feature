@@ -1,5 +1,5 @@
 Feature: Demo sign-in
-  As a hiring manager evaluating the portal
+  As a visitor exploring the portal
   I want to sign in as a ready-made demo client with one click
   So that I can explore the product without creating an account
 
