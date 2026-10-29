@@ -105,6 +105,20 @@ public sealed class TransferCommandsTests
     }
 
     [Fact]
+    public async Task LosingARaceOnTheAccountVersionToARetryOfTheSameKeyIsAlsoAReplay()
+    {
+        // Seen under load: the winner's balance update made the loser's version check fail before its key insert did.
+        var winner = await Send(Request(key: "race"));
+        _store.HideKeysOnce = true;
+        _store.FailNextSaveWith = new TransferConcurrencyException();
+
+        var loser = await Send(Request(key: "race", version: _brokerage.Version));
+
+        loser.Status.ShouldBe(TransferStatus.Replayed);
+        loser.Transfer.ShouldBe(winner.Transfer);
+    }
+
+    [Fact]
     public async Task AnotherClientsAccountLooksMissingButIsFlaggedForAudit()
     {
         var outcome = await Send(Request(to: _rajSavings.Id));
