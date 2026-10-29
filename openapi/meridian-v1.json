@@ -170,6 +170,57 @@
         }
       }
     },
+    "/api/v1/planner/simulations": {
+      "post": {
+        "tags": [
+          "Planner"
+        ],
+        "summary": "Monte Carlo projection (2,000 runs) of whether savings last to age 95. Illustrative, not advice.",
+        "operationId": "SimulateRetirementPlan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/antiforgery": {
       "get": {
         "tags": [
@@ -810,6 +861,33 @@
           }
         }
       },
+      "AssumptionsResponse": {
+        "required": [
+          "stockMean",
+          "stockVolatility",
+          "bondMean",
+          "bondVolatility"
+        ],
+        "type": "object",
+        "properties": {
+          "stockMean": {
+            "type": "number",
+            "format": "double"
+          },
+          "stockVolatility": {
+            "type": "number",
+            "format": "double"
+          },
+          "bondMean": {
+            "type": "number",
+            "format": "double"
+          },
+          "bondVolatility": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "ChangePasswordRequest": {
         "required": [
           "currentPassword",
@@ -1135,6 +1213,83 @@
           }
         }
       },
+      "SimulationRequest": {
+        "required": [
+          "currentSavings",
+          "monthlyContribution",
+          "currentAge",
+          "retirementAge",
+          "annualSpending",
+          "stockPercent"
+        ],
+        "type": "object",
+        "properties": {
+          "currentSavings": {
+            "type": "number",
+            "format": "double"
+          },
+          "monthlyContribution": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentAge": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "retirementAge": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "annualSpending": {
+            "type": "number",
+            "format": "double"
+          },
+          "stockPercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "seed": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "SimulationResponse": {
+        "required": [
+          "successRate",
+          "runs",
+          "endAge",
+          "years",
+          "assumptions"
+        ],
+        "type": "object",
+        "properties": {
+          "successRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "runs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "endAge": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "years": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/YearProjectionResponse"
+            }
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/AssumptionsResponse"
+          }
+        }
+      },
       "TransferResponse": {
         "required": [
           "id",
@@ -1180,6 +1335,33 @@
             "type": "string"
           }
         }
+      },
+      "YearProjectionResponse": {
+        "required": [
+          "age",
+          "p10",
+          "p50",
+          "p90"
+        ],
+        "type": "object",
+        "properties": {
+          "age": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "p10": {
+            "type": "number",
+            "format": "double"
+          },
+          "p50": {
+            "type": "number",
+            "format": "double"
+          },
+          "p90": {
+            "type": "number",
+            "format": "double"
+          }
+        }
       }
     }
   },
@@ -1192,6 +1374,9 @@
     },
     {
       "name": "Transfers"
+    },
+    {
+      "name": "Planner"
     },
     {
       "name": "Auth"

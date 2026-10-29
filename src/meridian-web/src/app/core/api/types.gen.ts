@@ -55,6 +55,13 @@ export type AllocationSliceResponse = {
   percent: number;
 };
 
+export type AssumptionsResponse = {
+  stockMean: number;
+  stockVolatility: number;
+  bondMean: number;
+  bondVolatility: number;
+};
+
 export type ChangePasswordRequest = {
   currentPassword: string;
   newPassword: string;
@@ -143,6 +150,24 @@ export type SignInRequest = {
   password: string;
 };
 
+export type SimulationRequest = {
+  currentSavings: number;
+  monthlyContribution: number;
+  currentAge: number;
+  retirementAge: number;
+  annualSpending: number;
+  stockPercent: number;
+  seed?: null | number;
+};
+
+export type SimulationResponse = {
+  successRate: number;
+  runs: number;
+  endAge: number;
+  years: Array<YearProjectionResponse>;
+  assumptions: AssumptionsResponse;
+};
+
 export type TransferResponse = {
   id: string;
   fromAccountId: string;
@@ -154,6 +179,13 @@ export type TransferResponse = {
 export type VersionResponse = {
   version: string;
   commit: string;
+};
+
+export type YearProjectionResponse = {
+  age: number;
+  p10: number;
+  p50: number;
+  p90: number;
 };
 
 export type GetVersionData = {
@@ -247,6 +279,37 @@ export type CreateTransferResponses = {
 };
 
 export type CreateTransferResponse = CreateTransferResponses[keyof CreateTransferResponses];
+
+export type SimulateRetirementPlanData = {
+  body: SimulationRequest;
+  path?: never;
+  query?: never;
+  url: '/api/v1/planner/simulations';
+};
+
+export type SimulateRetirementPlanErrors = {
+  /**
+   * Bad Request
+   */
+  400: HttpValidationProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type SimulateRetirementPlanError =
+  SimulateRetirementPlanErrors[keyof SimulateRetirementPlanErrors];
+
+export type SimulateRetirementPlanResponses = {
+  /**
+   * OK
+   */
+  200: SimulationResponse;
+};
+
+export type SimulateRetirementPlanResponse =
+  SimulateRetirementPlanResponses[keyof SimulateRetirementPlanResponses];
 
 export type GetAntiforgeryTokenData = {
   body?: never;
