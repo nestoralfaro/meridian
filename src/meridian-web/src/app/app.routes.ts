@@ -36,6 +36,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transfer/transfer-page').then((m) => m.TransferPage),
   },
   {
+    path: 'planner',
+    title: 'Retirement planner | Meridian',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/planner/planner-page').then((m) => m.PlannerPage),
+  },
+  {
     path: 'activity',
     title: 'Activity | Meridian',
     canActivate: [authGuard],
