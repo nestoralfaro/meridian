@@ -1,0 +1,157 @@
+<h1>Retirement planner</h1>
+<p class="intro">
+  See how likely your savings are to last to age 95, across 2,000 simulated market histories. An
+  educational illustration in today's dollars, not financial advice.
+</p>
+
+<div class="layout">
+  <form class="form" [formGroup]="form" (ngSubmit)="run()" novalidate>
+    @if (summary().length > 0) {
+      <div class="error-summary" id="planner-error-summary" role="alert" tabindex="-1">
+        <p class="error-summary__title">Please check the following:</p>
+        <ul>
+          @for (message of summary(); track message) {
+            <li>{{ message }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @for (
+      field of [
+        { key: 'currentAge', label: 'Your age', prefix: '', suffix: 'years' },
+        { key: 'retirementAge', label: 'Retirement age', prefix: '', suffix: 'years' },
+        { key: 'currentSavings', label: 'Savings today', prefix: '$', suffix: '' },
+        {
+          key: 'monthlyContribution',
+          label: 'Monthly saving until retirement',
+          prefix: '$',
+          suffix: '',
+        },
+        { key: 'annualSpending', label: 'Yearly spending in retirement', prefix: '$', suffix: '' },
+        { key: 'stockPercent', label: 'Invested in stocks', prefix: '', suffix: '%' },
+      ];
+      track field.key
+    ) {
+      @let key = $any(field.key);
+      <div class="field">
+        <label [for]="'planner-' + field.key">{{ field.label }}</label>
+        <div class="affix">
+          @if (field.prefix) {
+            <span aria-hidden="true">{{ field.prefix }}</span>
+          }
+          <input
+            [id]="'planner-' + field.key"
+            type="number"
+            inputmode="numeric"
+            [formControlName]="field.key"
+            [attr.aria-invalid]="errorsFor(key).length > 0"
+            [attr.aria-describedby]="
+              errorsFor(key).length > 0 ? 'planner-' + field.key + '-error' : null
+            "
+          />
+          @if (field.suffix) {
+            <span aria-hidden="true">{{ field.suffix }}</span>
+          }
+        </div>
+        @if (errorsFor(key).length > 0) {
+          <p [id]="'planner-' + field.key + '-error'" class="field__error">
+            {{ errorsFor(key).join(' ') }}
+          </p>
+        }
+      </div>
+    }
+
+    <button type="submit" class="button" [disabled]="busy()">
+      {{ busy() ? 'Running…' : 'Run the plan' }}
+    </button>
+  </form>
+
+  @if (result(); as r) {
+    <section
+      class="result"
+      id="planner-result"
+      tabindex="-1"
+      aria-labelledby="planner-result-heading"
+    >
+      <h2 id="planner-result-heading">
+        <span class="result__percent">{{ successPercent() }}%</span>
+        chance your savings last to age {{ r.endAge }}
+      </h2>
+
+      @if (chart(); as c) {
+        <figure class="fan">
+          <svg [attr.viewBox]="viewBox" role="img" aria-labelledby="fan-caption">
+            @for (tick of c.ticks; track tick.label) {
+              <line
+                class="fan__grid"
+                [attr.x1]="c.left"
+                [attr.x2]="c.right"
+                [attr.y1]="tick.y"
+                [attr.y2]="tick.y"
+              />
+              <text
+                class="fan__label"
+                [attr.x]="c.left - 8"
+                [attr.y]="tick.y + 4"
+                text-anchor="end"
+              >
+                {{ tick.label }}
+              </text>
+            }
+            @for (tick of c.ageTicks; track tick.label) {
+              <text
+                class="fan__label"
+                [attr.x]="tick.x"
+                [attr.y]="c.baseline + 18"
+                text-anchor="middle"
+              >
+                {{ tick.label }}
+              </text>
+            }
+            <path class="fan__band" [attr.d]="c.band" />
+            <path class="fan__median" [attr.d]="c.median" />
+          </svg>
+          <figcaption id="fan-caption">
+            Savings by age: the line is the middle outcome; the shaded band spans the 10th to 90th
+            percentile of simulated outcomes. The table below has the same numbers.
+          </figcaption>
+        </figure>
+      }
+
+      <details class="numbers">
+        <summary>Show the numbers</summary>
+        <table>
+          <caption class="visually-hidden">
+            Projected savings by age
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Age</th>
+              <th scope="col">Poor markets (10th)</th>
+              <th scope="col">Typical (50th)</th>
+              <th scope="col">Strong markets (90th)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of tableRows(); track row.age) {
+              <tr>
+                <th scope="row">{{ row.age }}</th>
+                <td>{{ row.p10 }}</td>
+                <td>{{ row.p50 }}</td>
+                <td>{{ row.p90 }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </details>
+
+      <p class="assumptions">
+        Assumes yearly real returns averaging {{ (r.assumptions.stockMean * 100).toFixed(1) }}% for
+        stocks and {{ (r.assumptions.bondMean * 100).toFixed(1) }}% for bonds, with typical
+        volatility; {{ r.runs.toLocaleString('en-US') }} runs. Past patterns don't guarantee future
+        results.
+      </p>
+    </section>
+  }
+</div>
