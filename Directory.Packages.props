@@ -23,7 +23,7 @@
     <PackageVersion Include="Npgsql.OpenTelemetry" Version="10.0.3" />
     <!-- One OpenTelemetry version across the solution (the Azure Monitor distro requires >= 1.15). -->
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.20.1" />
-    <PackageVersion Include="HtmlSanitizer" Version="9.2.995" />
+    <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
     <PackageVersion Include="Markdig" Version="1.5.0" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.18.3" />
   </ItemGroup>
