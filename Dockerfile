@@ -15,7 +15,7 @@ COPY src/meridian-web/ ./
 RUN npm run build
 
 # ---- 2. Publish the API --------------------------------------------------------
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS api
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:11.0 AS api
 ARG TARGETARCH
 # Git commit stamped into AssemblyInformationalVersion (served by GET /api/v1/version).
 ARG SOURCE_REVISION=unknown
@@ -38,7 +38,7 @@ RUN dotnet publish src/Meridian.Api/Meridian.Api.csproj -c Release -a $TARGETARC
 COPY --from=web /src/meridian-web/dist/meridian-web/browser /app/wwwroot
 
 # ---- Migrations (separate target: `docker compose` runs it before the app) -----------
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS migrations-build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:11.0 AS migrations-build
 ARG TARGETARCH
 WORKDIR /src
 COPY .editorconfig dotnet-tools.json global.json Directory.Build.props Directory.Packages.props ./
